@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز الخدمات - Luxen Store</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .service-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .service-title {
+            font-size: 1.8rem;
+            color: #0d47a1;
+            margin-bottom: 15px;
+        }
+
+        .service-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .coming-soon {
+            background: linear-gradient(135deg, #757575 0%, #424242 100%);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: white;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .service-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-star"></i>
+            </div>
+            <h1>مركز خدمات Luxen Store</h1>
+            <p class="subtitle">اختر الخدمة التي تريد استخدامها</p>
+        </div>
+
+        <div class="services-grid">
+            <div class="service-card" onclick="window.location.href='login.html'">
+                <div class="service-icon">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <h2 class="service-title">نظام متابعة الأدوية</h2>
+                <p class="service-description">
+                    نظام متكامل لمتابعة الأدوية والجرعات، مع إشعارات ذكية وجدولة تلقائية.
+                    مثالي للمرضى وكبار السن والعائلات.
+                </p>
+                <button class="btn">الدخول إلى النظام</button>
+            </div>
+
+            <div class="service-card" onclick="window.location.href='https://luxenstore.web.app'">
+                <div class="service-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <h2 class="service-title">Luxen Store</h2>
+                <p class="service-description">
+                    متجر إلكتروني متكامل مع نظام إدارة الطلبات والمخزون.
+                    مناسب للأعمال التجارية الصغيرة والمتوسطة.
+                </p>
+                <button class="btn">زيارة المتجر</button>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <h2 class="service-title">نظام المواعيد</h2>
+                <p class="service-description">
+                    نظام حجز مواعيد للمراكز الطبية والعيادات.
+                    مع إشعارات وتذكيرات للمرضى والأطباء.
+                </p>
+                <button class="btn coming-soon">قريباً</button>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2 class="service-title">نظام إدارة المشاريع</h2>
+                <p class="service-description">
+                    نظام متكامل لإدارة المهام والمشاريع.
+                    مع تقارير أداء ومتابعة الفريق.
+                </p>
+                <button class="btn coming-soon">قريباً</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 Luxen Store. جميع الحقوق محفوظة.</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                للإستفسارات: support@luxenstore.com
+            </p>
+        </div>
+    </div>
+</body>
+</html>

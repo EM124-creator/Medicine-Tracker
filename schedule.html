@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جدول الجرعات والإحصائيات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        /* تبديل اللغة */
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        body.dark-mode .header {
+            background: #2c2c3e;
+            color: #e0e0e0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #0d47a1;
+            margin-bottom: 10px;
+        }
+
+        body.dark-mode h1 {
+            color: #8fa3f5;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        body.dark-mode .subtitle {
+            color: #999;
+        }
+
+        .current-date {
+            margin-top: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        body.dark-mode .current-date {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode .stat-card {
+            background: #2c2c3e;
+            color: #e0e0e0;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #4CAF50 0%, #2e7d32 100%);
+            color: white;
+        }
+
+        .stat-card.danger {
+            background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+            color: white;
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* === تحسينات الجدول === */
+        .schedule-table-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        body.dark-mode .schedule-table-container {
+            background: #2c2c3e;
+            color: #e0e0e0;
+        }
+
+        /* تحسينات الجدول للطباعة */
+        @media print {
+            .schedule-table-container {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                padding: 10px !important;
+            }
+
+            .stat-card {
+                break-inside: avoid;
+            }
+
+            table {
+                break-inside: auto;
+            }
+
+            tr {
+                break-inside: avoid;
+                break-after: auto;
+            }
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        /* خط عريض بين الأيام فقط */
+        .day-separator {
+            border-top: 3px solid #667eea !important;
+        }
+
+        .schedule-table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            min-width: 150px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .schedule-table thead th {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+        }
+
+        /* خلايا البيانات */
+        .schedule-table td {
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            vertical-align: middle;
+            min-width: 180px;
+            position: relative;
+            background: #f9f9f9;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode .schedule-table td {
+            border-color: #424242;
+            background: #1a1a2e;
+        }
+
+        /* خلايا التاريخ - ثابتة عند التمرير */
+        .date-header {
+            position: sticky;
+            left: 0;
+            z-index: 50;
+            background: #e3f2fd;
+            font-weight: 700;
+            color: #0d47a1;
+            min-width: 180px;
+            border-right: 2px solid #667eea;
+        }
+
+        body.dark-mode .date-header {
+            background: #1e3a5f;
+            color: #8fa3f5;
+            border-right-color: #8fa3f5;
+        }
+
+        /* خلايا الجرعات */
+        .dose-cell {
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 2px;
+            position: relative;
+        }
+
+        .dose-cell.taken {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: 2px solid #4CAF50;
+        }
+
+        body.dark-mode .dose-cell.taken {
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        }
+
+        .dose-cell.missed {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border: 2px solid #f44336;
+        }
+
+        body.dark-mode .dose-cell.missed {
+            background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
+        }
+
+        .dose-cell.upcoming {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 2px solid #2196F3;
+        }
+
+        body.dark-mode .dose-cell.upcoming {
+            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+        }
+
+        .dose-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #4CAF50;
+        }
+
+        .dose-info {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            width: 100%;
+        }
+
+        body.dark-mode .dose-info {
+            color: #999;
+        }
+
+        .dose-time {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .food-relation {
+            font-size: 11px;
+            color: #ff9800;
+            margin-bottom: 4px;
+        }
+
+        .dose-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .dose-actions button {
+            padding: 3px 8px;
+            font-size: 11px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .edit-time-btn {
+            background: #2196F3;
+            color: white;
+        }
+
+        .add-note-btn {
+            background: #ff9800;
+            color: white;
+        }
+
+        .note-indicator {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            color: #ff9800;
+            font-size: 12px;
+        }
+
+        /* تأثير hover */
+        .schedule-table tr:hover td:not(.date-header) {
+            background: #f0f7ff;
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode .schedule-table tr:hover td:not(.date-header) {
+            background: #1e3a5f;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        body.dark-mode .empty-state {
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* تحسينات للجوال */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .header {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .schedule-table-container {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .schedule-table {
+                font-size: 12px;
+            }
+
+            .schedule-table th,
+            .schedule-table td {
+                padding: 8px;
+                min-width: 120px;
+            }
+
+            .dose-cell {
+                min-height: 80px;
+                padding: 5px;
+            }
+            
+            .language-switcher {
+                top: 10px;
+                left: 10px;
+            }
+            
+            .lang-btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+            
+            .schedule-table {
+                font-size: 11px;
+            }
+            
+            .schedule-table th,
+            .schedule-table td {
+                padding: 5px;
+                min-width: 100px;
+            }
+            
+            .dose-cell {
+                min-height: 60px;
+                padding: 3px;
+            }
+            
+            .dose-info {
+                font-size: 10px;
+            }
+        }
+
+        /* تحسينات الطباعة */
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+                color: black !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .header,
+            .schedule-table-container {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin: 10px 0 !important;
+                padding: 15px !important;
+                border-radius: 0 !important;
+                page-break-inside: avoid;
+            }
+
+            .schedule-table {
+                border: 1px solid #000 !important;
+            }
+
+            .schedule-table th,
+            .schedule-table td {
+                border: 1px solid #000 !important;
+                color: black !important;
+                background: white !important;
+            }
+
+            .stat-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin: 5px !important;
+                break-inside: avoid;
+            }
+
+            .btn {
+                display: none !important;
+            }
+
+            .dose-actions {
+                display: none !important;
+            }
+
+            .language-switcher {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- تبديل اللغة -->
+    <div class="language-switcher">
+        <button class="lang-btn" id="langBtn">
+            <i class="fas fa-language"></i> English
+        </button>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1 data-translate="statisticsAndSchedule"><i class="fas fa-chart-bar"></i> الإحصائيات وجدول الجرعات</h1>
+            <p class="subtitle" data-translate="monthlyView">عرض شهري - إحصائيات الأدوية والجرعات</p>
+            <div class="current-date" id="currentDate"></div>
+            
+            <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-warning no-print" onclick="window.print()" data-translate="printTable">
+                    <i class="fas fa-print"></i> طباعة الجدول
+                </button>
+                <a href="index.html" class="btn no-print" data-translate="backToMain">
+                    <i class="fas fa-arrow-right"></i> العودة للصفحة الرئيسية
+                </a>
+            </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <div class="schedule-table-container">
+            <h2 style="font-size: 1.8rem; margin-bottom: 20px; color: #0d47a1; display: flex; align-items: center; gap: 10px; padding-bottom: 15px; border-bottom: 3px solid #667eea;">
+                <i class="fas fa-calendar-check"></i> <span data-translate="monthlySchedule">جدول الجرعات الشهري</span>
+            </h2>
+            <div id="scheduleTable"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <!-- ملفات النظام -->
+    <script src="translation.js"></script>
+    <script src="firebase-db.js"></script>
+    
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAcSevspk9_fK4jC1ZkLRhRMNqG9Pv5mU",
+            authDomain: "medicine-tracker-a8955.firebaseapp.com",
+            databaseURL: "https://medicine-tracker-a8955-default-rtdb.firebaseio.com",
+            projectId: "medicine-tracker-a8955",
+            storageBucket: "medicine-tracker-a8955.firebasestorage.app",
+            messagingSenderId: "507688371470",
+            appId: "1:507688371470:web:e65375310a82e5ba83435f",
+            measurementId: "G-SK8M4BFT6Q"
+        };
+
+        // تهيئة Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // الحصول على بيانات من URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user');
+        const isPrintMode = urlParams.get('print') === 'true';
+
+        let db;
+        let currentUser = null;
+
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', async function() {
+            // تهيئة الترجمة
+            Translator.init();
+            
+            // تهيئة قاعدة البيانات
+            db = new FirebaseDB();
+            
+            // التحقق من المصادقة
+            await checkAuth();
+            
+            // تحديث التاريخ
+            updateCurrentDate();
+            
+            // تحميل البيانات
+            await loadData();
+            
+            // إذا كان في وضع الطباعة، نطبع بعد تحميل الصفحة
+            if (isPrintMode) {
+                setTimeout(() => {
+                    window.print();
+                }, 1000);
+            }
+        });
+
+        // التحقق من المصادقة
+        async function checkAuth() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            currentUser = JSON.parse(userStr);
+            
+            // إذا كان المستخدم ليس مديراً ولا هو صاحب البيانات
+            if (currentUser.id !== 'admin' && currentUser.id !== userId) {
+                window.location.href = 'index.html';
+                return false;
+            }
+            
+            return true;
+        }
+
+        // تحديث التاريخ
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            
+            const dateElement = document.getElementById('currentDate');
+            if (dateElement) {
+                dateElement.textContent = now.toLocaleDateString(
+                    Translator.currentLang === 'ar' ? 'ar-SA' : 'en-US', 
+                    options
+                );
+            }
+        }
+
+        // تحميل البيانات
+        async function loadData() {
+            try {
+                let medications = [];
+                let userName = '';
+
+                if (userId === 'admin') {
+                    medications = [];
+                    userName = Translator.translate('systemAdmin');
+                } else {
+                    medications = await db.getUserMedications(userId);
+                    const userData = await db.getUser(userId);
+                    userName = userData ? userData.name : Translator.translate('unknownUser');
+                }
+
+                // تحديث عنوان الصفحة
+                document.querySelector('h1').innerHTML = 
+                    `<i class="fas fa-chart-bar"></i> ${Translator.translate('statisticsAndSchedule')} - ${userName}`;
+
+                // عرض الإحصائيات
+                renderStats(medications);
+                
+                // عرض الجدول
+                renderSchedule(medications);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('scheduleTable').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>${Translator.translate('loadError')}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // عرض الإحصائيات
+        function renderStats(medications) {
+            const container = document.getElementById('statsGrid');
+            if (!container) return;
+            
+            let totalDoses = 0;
+            let takenDoses = 0;
+            let missedDoses = 0;
+            let upcomingDoses = 0;
+
+            const now = new Date();
+
+            medications.forEach(med => {
+                if (med.doses) {
+                    med.doses.forEach(dose => {
+                        totalDoses++;
+                        const doseTime = new Date(dose.dateTime);
+                        
+                        if (dose.taken) {
+                            takenDoses++;
+                        } else if (doseTime < now) {
+                            missedDoses++;
+                        } else {
+                            upcomingDoses++;
+                        }
+                    });
+                }
+            });
+
+            const adherence = (takenDoses + missedDoses) > 0 ? 
+                Math.round((takenDoses / (takenDoses + missedDoses)) * 100) : 0;
+
+            container.innerHTML = `
+                <div class="stat-card success">
+                    <div class="stat-number">${takenDoses}</div>
+                    <div class="stat-label">
+                        <i class="fas fa-check-circle"></i> ${Translator.translate('dosesTaken')}
+                    </div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-number">${missedDoses}</div>
+                    <div class="stat-label">
+                        <i class="fas fa-times-circle"></i> ${Translator.translate('missedDoses')}
+                    </div>
+                </div>
+                <div class="stat-card primary">
+                    <div class="stat-number">${upcomingDoses}</div>
+                    <div class="stat-label">
+                        <i class="fas fa-clock"></i> ${Translator.translate('upcomingDoses')}
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-number">${adherence}%</div>
+                    <div class="stat-label">
+                        <i class="fas fa-chart-line"></i> ${Translator.translate('adherenceRate')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // عرض الجدول
+        function renderSchedule(medications) {
+            const container = document.getElementById('scheduleTable');
+            if (!container) return;
+
+            if (!medications || medications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <p>${Translator.translate('noDosesToShow')}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // جمع جميع التواريخ من جميع الأدوية
+            const allDates = new Set();
+            medications.forEach(med => {
+                if (med.doses) {
+                    med.doses.forEach(dose => {
+                        const doseDate = new Date(dose.dateTime);
+                        const dateStr = doseDate.toISOString().split('T')[0];
+                        allDates.add(dateStr);
+                    });
+                }
+            });
+
+            let sortedDates = Array.from(allDates).sort();
+            
+            // عرض شهري (30 يوم من اليوم)
+            const today = new Date();
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+            sortedDates = sortedDates.filter(date => {
+                const d = new Date(date + 'T00:00:00');
+                return d >= monthStart && d <= monthEnd;
+            });
+
+            // إذا لم تكن هناك تواريخ، نعرض الشهر الحالي
+            if (sortedDates.length === 0) {
+                for (let i = 1; i <= monthEnd.getDate(); i++) {
+                    const date = new Date(today.getFullYear(), today.getMonth(), i);
+                    sortedDates.push(date.toISOString().split('T')[0]);
+                }
+            }
+
+            let html = '<table class="schedule-table"><thead><tr><th class="date-header">' + 
+                       Translator.translate('dateTime') + '</th>';
+            
+            medications.forEach(med => {
+                html += `<th>${med.name}</th>`;
+            });
+            
+            html += '</tr></thead><tbody>';
+
+            // تتبع اليوم السابق لإضافة فواصل
+            let previousDate = null;
+
+            sortedDates.forEach((dateStr, index) => {
+                const date = new Date(dateStr + 'T00:00:00');
+                const formattedDate = date.toLocaleDateString(
+                    Translator.currentLang === 'ar' ? 'ar-SA' : 'en-US',
+                    {
+                        weekday: 'short',
+                        day: '2-digit',
+                        month: '2-digit'
+                    }
+                );
+
+                // إضافة فاصل إذا كان اليوم مختلفاً عن اليوم السابق
+                const dayClass = previousDate && 
+                    previousDate.getDate() !== date.getDate() ? 'day-separator' : '';
+                
+                html += `<tr class="${dayClass}">`;
+                html += `<td class="date-header">${formattedDate}</td>`;
+                
+                medications.forEach(med => {
+                    const dosesForDate = med.doses ? med.doses.filter(dose => {
+                        const doseDate = new Date(dose.dateTime);
+                        return doseDate.toISOString().split('T')[0] === dateStr;
+                    }) : [];
+                    
+                    if (dosesForDate.length > 0) {
+                        let cellContent = '';
+                        
+                        dosesForDate.forEach(dose => {
+                            const doseTime = new Date(dose.dateTime);
+                            const time = formatDateTimeTo12Hour(dose.dateTime);
+                            const now = new Date();
+                            const isPast = doseTime < now;
+                            let cellClass = '';
+                            
+                            if (dose.taken) {
+                                cellClass = 'taken';
+                            } else if (isPast) {
+                                cellClass = 'missed';
+                            } else {
+                                cellClass = 'upcoming';
+                            }
+                            
+                            const foodText = {
+                                'before': Translator.translate('beforeMeal'),
+                                'after': Translator.translate('afterMeal'),
+                                'none': ''
+                            };
+                            
+                            cellContent += `
+                                <div class="dose-cell ${cellClass}">
+                                    ${dose.note ? 
+                                        '<div class="note-indicator"><i class="fas fa-sticky-note"></i></div>' : ''}
+                                    <input type="checkbox" class="dose-checkbox" 
+                                           ${dose.taken ? 'checked' : ''}
+                                           disabled>
+                                    <div class="dose-info">
+                                        <div class="dose-time">${time}</div>
+                                        <div class="food-relation">${foodText[med.foodRelation]}</div>
+                                        ${med.dosage ? 
+                                            `<div style="color: #2196F3; font-size: 11px; margin: 2px 0;">
+                                                ${Translator.translate('dosage')}: ${med.dosage}
+                                            </div>` : ''}
+                                        ${dose.takenTime ? 
+                                            `<div style="color: #4CAF50; font-size: 11px; margin-top: 2px;">
+                                                ${Translator.translate('takenAt')}: ${formatDateTimeTo12Hour(dose.takenTime)}
+                                            </div>` : ''}
+                                        ${dose.note ? 
+                                            `<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">
+                                                <i class="fas fa-sticky-note"></i> ${dose.note}
+                                            </div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        html += `<td>${cellContent}</td>`;
+                    } else {
+                        html += '<td>-</td>';
+                    }
+                });
+                
+                html += '</tr>';
+                previousDate = date;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // دالة لتحويل الوقت إلى تنسيق 12 ساعة
+        function formatDateTimeTo12Hour(dateTimeStr) {
+            if (!dateTimeStr) return '';
+            
+            const date = new Date(dateTimeStr);
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+            
+            if (Translator.currentLang === 'ar') {
+                const ampm = hours >= 12 ? 'م' : 'ص';
+                let hours12 = hours % 12;
+                hours12 = hours12 ? hours12 : 12;
+                return `${hours12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+            } else {
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                let hours12 = hours % 12;
+                hours12 = hours12 ? hours12 : 12;
+                return `${hours12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+            }
+        }
+    </script>
+</body>
+</html>

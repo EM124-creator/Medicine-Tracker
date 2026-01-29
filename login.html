@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+      <script src="translation.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Translator.init();
+    });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام متابعة الأدوية - تسجيل الدخول</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            direction: rtl;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        /* تبديل اللغة */
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        body.dark-mode .login-container {
+            background: rgba(44, 44, 62, 0.95);
+            color: #e0e0e0;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .login-logo {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .login-title {
+            color: #0d47a1;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        body.dark-mode .login-title {
+            color: #8fa3f5;
+        }
+
+        .login-subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        body.dark-mode .login-subtitle {
+            color: #999;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-group {
+            text-align: right;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #0d47a1;
+            font-size: 1.1rem;
+        }
+
+        body.dark-mode .form-label {
+            color: #8fa3f5;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            color: #333;
+        }
+
+        body.dark-mode .form-input {
+            background: #2c2c3e;
+            color: #e0e0e0;
+            border-color: #424242;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .login-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .demo-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            text-align: right;
+        }
+
+        .demo-title {
+            color: #0d47a1;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        body.dark-mode .demo-title {
+            color: #8fa3f5;
+        }
+
+        .demo-credentials {
+            text-align: right;
+            line-height: 1.8;
+        }
+
+        .credential-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode .credential-item {
+            border-bottom-color: rgba(255,255,255,0.1);
+        }
+
+        .credential-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        body.dark-mode .credential-label {
+            color: #e0e0e0;
+        }
+
+        .credential-value {
+            color: #667eea;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .form-footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        body.dark-mode .form-footer {
+            color: #999;
+        }
+
+        /* تأثيرات للجوال */
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .login-logo {
+                font-size: 3rem;
+            }
+            
+            .login-title {
+                font-size: 1.8rem;
+            }
+            
+            .form-input {
+                padding: 14px 15px 14px 45px;
+            }
+            
+            .language-switcher {
+                top: 10px;
+                left: 10px;
+            }
+            
+            .lang-btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .login-container {
+                padding: 25px 15px;
+                border-radius: 20px;
+            }
+            
+            .login-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                padding: 14px;
+                font-size: 14px;
+            }
+        }
+
+        /* تحسينات للطباعة */
+        @media print {
+            .login-container {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            
+            .btn, .demo-info {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- تبديل اللغة -->
+    <div class="language-switcher">
+        <button class="lang-btn" id="langBtn">
+            <i class="fas fa-language"></i> English
+        </button>
+    </div>
+
+    <!-- حاوية تسجيل الدخول -->
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <h1 class="login-title" data-translate="appTitle">نظام متابعة الأدوية المتقدم</h1>
+            <p class="login-subtitle" data-translate="appSubtitle">إدارة أدويتك ومتابعة جرعاتك بدقة</p>
+        </div>
+
+        <form class="login-form" id="loginForm" onsubmit="return false;">
+            <div class="form-group">
+                <label class="form-label" data-translate="username">اسم المستخدم</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" class="form-input" id="loginUsername" 
+                           placeholder="أدخل اسم المستخدم" data-translate-placeholder="usernamePlaceholder" autocomplete="username">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" data-translate="password">كلمة المرور</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" class="form-input" id="loginPassword" 
+                           placeholder="أدخل كلمة المرور" data-translate-placeholder="passwordPlaceholder" autocomplete="current-password">
+                </div>
+            </div>
+            
+            <div class="login-actions">
+                <button type="submit" class="btn btn-primary" onclick="login()" data-translate="login">
+                    <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="openRegisterModal()" data-translate="register">
+                    <i class="fas fa-user-plus"></i> تسجيل جديد
+                </button>
+            </div>
+        </form>
+
+        <!-- معلومات الدخول التجريبية -->
+        <div class="demo-info">
+            <div class="demo-title">
+                <i class="fas fa-vial"></i>
+                <span data-translate="demoCredentials">بيانات الدخول للتجربة</span>
+            </div>
+            <div class="demo-credentials">
+                <div class="credential-item">
+                    <span class="credential-label" data-translate="admin">المدير:</span>
+                    <span class="credential-value">admin / admin123</span>
+                </div>
+                <div class="credential-item">
+                    <span class="credential-label" data-translate="testUser">مستخدم تجريبي:</span>
+                    <span class="credential-value">test / test123</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <p data-translate="copyright">© 2024 نظام متابعة الأدوية. جميع الحقوق محفوظة.</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <!-- مكتبات مساعدة -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
+    <!-- ملفات النظام -->
+    <script src="translation.js"></script>
+    <script src="firebase-db.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAcSevspk9_fK4jC1ZkLRhRMNqG9Pv5mU",
+            authDomain: "medicine-tracker-a8955.firebaseapp.com",
+            databaseURL: "https://medicine-tracker-a8955-default-rtdb.firebaseio.com",
+            projectId: "medicine-tracker-a8955",
+            storageBucket: "medicine-tracker-a8955.firebasestorage.app",
+            messagingSenderId: "507688371470",
+            appId: "1:507688371470:web:e65375310a82e5ba83435f",
+            measurementId: "G-SK8M4BFT6Q"
+        };
+
+        // تهيئة Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // دالة تسجيل الدخول
+// استبدل دالة login() الحالية بهذه:
+async function login() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+
+    if (!username || !password) {
+        showToast('يرجى ملء جميع الحقول', 'error');
+        return;
+    }
+
+    try {
+        // تسجيل دخول باستخدام Firebase Auth
+        const userCredential = await firebase.auth().signInWithEmailAndPassword(
+            username + '@medication.com', // Firebase Auth يحتاج email
+            password
+        );
+        
+        const user = userCredential.user;
+        
+        // الحصول على بيانات إضافية من Realtime Database
+        const db = firebase.database();
+        const userRef = db.ref('users/' + username);
+        const snapshot = await userRef.once('value');
+        const userData = snapshot.val();
+        
+        if (userData) {
+            localStorage.setItem('currentUser', JSON.stringify({
+                id: username,
+                name: userData.name,
+                age: userData.age,
+                isAdmin: false
+            }));
+            showToast('مرحباً بك ' + userData.name, 'success');
+            window.location.href = 'index.html';
+        }
+    } catch (error) {
+        // إذا فشل تسجيل الدخول، حاول كمدير
+        if (username === 'admin' && password === 'admin123') {
+            localStorage.setItem('currentUser', JSON.stringify({
+                id: 'admin',
+                name: 'مدير النظام',
+                isAdmin: true
+            }));
+            window.location.href = 'index.html';
+        } else {
+            showToast('اسم المستخدم أو كلمة المرور غير صحيحة', 'error');
+        }
+    }
+}
+
+        // دالة فتح نافذة التسجيل
+        function openRegisterModal() {
+            // يمكنك إنشاء نافذة منبثقة أو توجيه لصفحة تسجيل
+            // هنا سأستخدم نافذة منبثقة بسيطة
+            const registerForm = `
+                <div style="padding: 20px; max-width: 400px;">
+                    <h3 style="color: #667eea; margin-bottom: 20px;">تسجيل مستخدم جديد</h3>
+                    <input type="text" id="regName" placeholder="الاسم الكامل" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="text" id="regUsername" placeholder="اسم المستخدم" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="password" id="regPassword" placeholder="كلمة المرور" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="number" id="regAge" placeholder="العمر" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+                    <button onclick="registerUser()" style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%;">تسجيل</button>
+                </div>
+            `;
+            
+            // يمكنك استخدام مكتبة مثل SweetAlert2 أو Bootstrap Modal هنا
+            alert('خاصية التسجيل الجديد تحت التطوير. يمكنك استخدام حساب تجريبي.');
+        }
+
+        // دالة عرض الإشعارات
+        function showToast(message, type = 'success') {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: type === 'success' ? "#4CAF50" : "#f44336",
+                stopOnFocus: true
+            }).showToast();
+        }
+
+        // تفعيل إدخال النموذج عند الضغط على Enter
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            login();
+        });
+
+        // تهيئة الترجمة عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            Translator.init();
+        });
+    </script>
+</body>
+</html>

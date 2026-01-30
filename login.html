@@ -335,7 +335,7 @@
             <p class="login-subtitle" data-translate="appSubtitle">إدارة أدويتك ومتابعة جرعاتك بدقة</p>
         </div>
 
-        <form class="login-form" id="loginForm" onsubmit="return false;">
+        <form class="login-form" id="loginForm">
             <div class="form-group">
                 <label class="form-label" data-translate="email">البريد الإلكتروني</label>
                 <div class="input-with-icon">
@@ -355,10 +355,10 @@
             </div>
             
             <div class="login-actions">
-                <button type="submit" class="btn btn-primary" onclick="login()" data-translate="login">
+                <button type="submit" class="btn btn-primary" data-translate="login">
                     <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
                 </button>
-                <button type="button" class="btn btn-secondary" onclick="openRegisterModal()" data-translate="register">
+                <button type="button" class="btn btn-secondary" id="registerBtn" data-translate="register">
                     <i class="fas fa-user-plus"></i> تسجيل جديد
                 </button>
             </div>
@@ -399,7 +399,7 @@
     <script src="translation.js"></script>
     
     <script>
-        // ===== تكوين Firebase =====
+        // ===== تهيئة Firebase =====
         const firebaseConfig = {
             apiKey: "AIzaSyBAcSevspk9_fK4jC1ZkLRhRMNqG9Pv5mU",
             authDomain: "medicine-tracker-a8955.firebaseapp.com",
@@ -411,136 +411,40 @@
             measurementId: "G-SK8M4BFT6Q"
         };
 
-        // تهيئة Firebase
+        // تهيئة Firebase فقط إذا لم تكن مسبقاً
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
 
-        const auth = firebase.auth();
-        const db = firebase.database();
-
         // ===== نظام الترجمة =====
-        class Translator {
-            static translations = {
-                ar: {
-                    appTitle: "نظام متابعة الأدوية",
-                    appSubtitle: "إدارة أدويتك ومتابعة جرعاتك بدقة",
-                    email: "البريد الإلكتروني",
-                    password: "كلمة المرور",
-                    emailPlaceholder: "أدخل بريدك الإلكتروني",
-                    passwordPlaceholder: "أدخل كلمة المرور",
-                    login: "تسجيل الدخول",
-                    register: "تسجيل جديد",
-                    demoCredentials: "بيانات الدخول للتجربة",
-                    admin: "المدير",
-                    testUser: "مستخدم تجريبي",
-                    copyright: "© 2024 نظام متابعة الأدوية. جميع الحقوق محفوظة.",
-                    fillAllFields: "يرجى ملء جميع الحقول",
-                    invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-                    loginError: "حدث خطأ أثناء تسجيل الدخول",
-                    welcome: "مرحباً بك",
-                    systemAdmin: "مدير النظام",
-                    registrationSuccess: "تم إنشاء الحساب بنجاح",
-                    registrationError: "حدث خطأ أثناء التسجيل"
-                },
-                en: {
-                    appTitle: "Medication Tracker",
-                    appSubtitle: "Manage your medications and track doses accurately",
-                    email: "Email",
-                    password: "Password",
-                    emailPlaceholder: "Enter your email",
-                    passwordPlaceholder: "Enter your password",
-                    login: "Login",
-                    register: "Register",
-                    demoCredentials: "Demo Credentials",
-                    admin: "Admin",
-                    testUser: "Test User",
-                    copyright: "© 2024 Medication Tracker. All rights reserved.",
-                    fillAllFields: "Please fill all fields",
-                    invalidCredentials: "Invalid email or password",
-                    loginError: "Login error occurred",
-                    welcome: "Welcome",
-                    systemAdmin: "System Administrator",
-                    registrationSuccess: "Account created successfully",
-                    registrationError: "Registration error occurred"
-                }
-            };
-
-            static currentLang = 'ar';
-
-            static init() {
-                this.currentLang = localStorage.getItem('language') || 'ar';
-                this.updatePage();
-                this.setupLanguageSwitcher();
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Translator !== 'undefined') {
+                Translator.init();
             }
-
-            static translate(key) {
-                return this.translations[this.currentLang][key] || key;
-            }
-
-            static updatePage() {
-                document.querySelectorAll('[data-translate]').forEach(element => {
-                    const key = element.getAttribute('data-translate');
-                    const translation = this.translate(key);
-                    if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-                        element.placeholder = translation;
-                    } else {
-                        element.textContent = translation;
-                    }
-                });
-
-                document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
-                    const key = element.getAttribute('data-translate-placeholder');
-                    element.placeholder = this.translate(key);
-                });
-
-                document.documentElement.dir = this.currentLang === 'ar' ? 'rtl' : 'ltr';
-                document.documentElement.lang = this.currentLang;
-
-                const langBtn = document.getElementById('langBtn');
-                if (langBtn) {
-                    langBtn.innerHTML = this.currentLang === 'ar' ? 
-                        '<i class="fas fa-language"></i> English' : 
-                        '<i class="fas fa-language"></i> العربية';
-                }
-            }
-
-            static setupLanguageSwitcher() {
-                const langBtn = document.getElementById('langBtn');
-                if (langBtn) {
-                    langBtn.addEventListener('click', () => {
-                        this.currentLang = this.currentLang === 'ar' ? 'en' : 'ar';
-                        localStorage.setItem('language', this.currentLang);
-                        this.updatePage();
-                    });
-                }
-            }
-
-            static setLanguage(lang) {
-                if (this.translations[lang]) {
-                    this.currentLang = lang;
-                    localStorage.setItem('language', lang);
-                    this.updatePage();
-                }
-            }
-        }
+            
+            // إعداد معالجات الأحداث
+            setupEventHandlers();
+        });
 
         // ===== دوال تسجيل الدخول =====
-        async function login() {
+        async function handleLogin(event) {
+            event.preventDefault();
+            
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
 
             if (!email || !password) {
-                showToast(Translator.translate('fillAllFields'), 'error');
+                showToast('يرجى ملء جميع الحقول', 'error');
                 return;
             }
 
             try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
                 const user = userCredential.user;
                 
                 // الحصول على بيانات المستخدم من Realtime Database
                 const username = email.split('@')[0];
+                const db = firebase.database();
                 const userRef = db.ref('users/' + username);
                 const snapshot = await userRef.once('value');
                 const userData = snapshot.val();
@@ -554,27 +458,27 @@
                         isAdmin: email === 'admin@medication.com'
                     }));
                     
-                    showToast(Translator.translate('welcome') + ' ' + userData.name, 'success');
+                    showToast('مرحباً بك ' + userData.name, 'success');
                     window.location.href = 'index.html';
                 } else if (email === 'admin@medication.com') {
                     // تسجيل دخول المدير
                     localStorage.setItem('currentUser', JSON.stringify({
                         id: 'admin',
-                        name: Translator.translate('systemAdmin'),
+                        name: 'مدير النظام',
                         email: email,
                         isAdmin: true
                     }));
                     window.location.href = 'index.html';
                 } else {
-                    showToast(Translator.translate('invalidCredentials'), 'error');
+                    showToast('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'error');
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                showToast(Translator.translate('loginError'), 'error');
+                showToast('حدث خطأ أثناء تسجيل الدخول: ' + error.message, 'error');
             }
         }
 
-        async function openRegisterModal() {
+        async function handleRegister() {
             // استخدام نموذج تسجيل بسيط
             const name = prompt('الرجاء إدخال اسمك الكامل:');
             if (!name) return;
@@ -592,10 +496,11 @@
             
             try {
                 // إنشاء حساب باستخدام Firebase Authentication
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
                 
                 // حفظ بيانات المستخدم في قاعدة البيانات
+                const db = firebase.database();
                 const username = email.split('@')[0];
                 await db.ref('users/' + username).set({
                     name: name,
@@ -607,45 +512,58 @@
                 // إنشاء قائمة أدوية فارغة للمستخدم
                 await db.ref('medications/' + username).set({});
                 
-                showToast(Translator.translate('registrationSuccess'), 'success');
+                showToast('تم إنشاء الحساب بنجاح', 'success');
+                
+                // تسجيل الدخول تلقائياً
                 setTimeout(() => {
                     location.reload();
                 }, 1500);
             } catch (error) {
                 console.error('Registration error:', error);
-                showToast(Translator.translate('registrationError') + ': ' + error.message, 'error');
+                showToast('حدث خطأ أثناء التسجيل: ' + error.message, 'error');
             }
         }
 
         function showToast(message, type = 'success') {
-            Toastify({
-                text: message,
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: type === 'success' ? "#4CAF50" : "#f44336",
-                stopOnFocus: true
-            }).showToast();
+            if (typeof Toastify !== 'undefined') {
+                Toastify({
+                    text: message,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: type === 'success' ? "#4CAF50" : "#f44336",
+                    stopOnFocus: true
+                }).showToast();
+            } else {
+                alert(message);
+            }
         }
 
-        // تفعيل إدخال النموذج عند الضغط على Enter
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            login();
-        });
-
-        // تهيئة الترجمة عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', function() {
-            Translator.init();
+        function setupEventHandlers() {
+            // زر تسجيل الدخول
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+            
+            // زر التسجيل الجديد
+            const registerBtn = document.getElementById('registerBtn');
+            if (registerBtn) {
+                registerBtn.addEventListener('click', handleRegister);
+            }
             
             // التحقق من وجود مستخدم مسجل بالفعل
-            auth.onAuthStateChanged((user) => {
+            firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                     // إذا كان المستخدم مسجلاً بالفعل، توجيهه إلى الصفحة الرئيسية
                     window.location.href = 'index.html';
                 }
             });
-        });
+        }
+
+        // جعل الدوال متاحة عالمياً لاستخدامها في onclick
+        window.handleLogin = handleLogin;
+        window.handleRegister = handleRegister;
     </script>
 </body>
 </html>

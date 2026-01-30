@@ -1,8 +1,79 @@
 // firebase-db.js
 class FirebaseDB {
     constructor() {
-        this.db = firebase.database();
-        this.auth = firebase.auth();
+        if (typeof firebase === 'undefined') {
+            console.error('Firebase is not loaded');
+            return;
+        }
+        
+        try {
+            this.db = firebase.database();
+            this.auth = firebase.auth();
+            console.log('FirebaseDB initialized successfully');
+        } catch (error) {
+            console.error('Error initializing FirebaseDB:', error);
+        }
+    }
+
+    // ===== إدارة المصادقة =====
+    async login(email, password) {
+        try {
+            const userCredential = await this.auth.signInWithEmailAndPassword(email, password);
+            return {
+                success: true,
+                user: userCredential.user
+            };
+        } catch (error) {
+            console.error('Login error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    async register(email, password, userData) {
+        try {
+            const userCredential = await this.auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // حفظ بيانات المستخدم
+            const username = email.split('@')[0];
+            await this.db.ref('users/' + username).set({
+                ...userData,
+                email: email,
+                createdAt: new Date().toISOString()
+            });
+            
+            return {
+                success: true,
+                user: user
+            };
+        } catch (error) {
+            console.error('Registration error:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    async logout() {
+        try {
+            await this.auth.signOut();
+            return { success: true };
+        } catch (error) {
+            console.error('Logout error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    getCurrentUser() {
+        return this.auth.currentUser;
+    }
+
+    onAuthStateChanged(callback) {
+        return this.auth.onAuthStateChanged(callback);
     }
 
     // ===== إدارة المستخدمين =====
@@ -38,7 +109,6 @@ class FirebaseDB {
 
     async deleteUser(username) {
         try {
-            // حذف المستخدم وأدويته
             await this.db.ref('users/' + username).remove();
             await this.db.ref('medications/' + username).remove();
             return true;
@@ -120,116 +190,6 @@ class FirebaseDB {
         }
     }
 
-    // ===== إعدادات النظام =====
-    async saveSettings(username, settings) {
-        try {
-            await this.db.ref('settings/' + username).set(settings);
-            return true;
-        } catch (error) {
-            console.error('Error saving settings:', error);
-            throw error;
-        }
-    }
-
-    async getSettings(username) {
-        try {
-            const snapshot = await this.db.ref('settings/' + username).once('value');
-            return snapshot.val() || {};
-        } catch (error) {
-            console.error('Error getting settings:', error);
-            return {};
-        }
-    }
-
-    // ===== النسخ الاحتياطي والاستعادة =====
-    async backupData(username) {
-        try {
-            const [medications, settings] = await Promise.all([
-                this.getUserMedications(username),
-                this.getSettings(username)
-            ]);
-            
-            return {
-                medications,
-                settings,
-                backupTime: new Date().toISOString()
-            };
-        } catch (error) {
-            console.error('Error backing up data:', error);
-            throw error;
-        }
-    }
-
-    async restoreData(username, backupData) {
-        try {
-            // استعادة الأدوية
-            if (backupData.medications) {
-                await this.db.ref('medications/' + username).remove();
-                
-                for (const medication of backupData.medications) {
-                    await this.saveMedication(username, medication);
-                }
-            }
-            
-            // استعادة الإعدادات
-            if (backupData.settings) {
-                await this.saveSettings(username, backupData.settings);
-            }
-            
-            return true;
-        } catch (error) {
-            console.error('Error restoring data:', error);
-            throw error;
-        }
-    }
-
-    // ===== الإحصائيات =====
-    async getUserStatistics(username) {
-        try {
-            const medications = await this.getUserMedications(username);
-            let totalDoses = 0;
-            let takenDoses = 0;
-            let missedDoses = 0;
-            const now = new Date();
-
-            medications.forEach(med => {
-                med.doses.forEach(dose => {
-                    totalDoses++;
-                    const doseTime = new Date(dose.dateTime);
-                    
-                    if (dose.taken) {
-                        takenDoses++;
-                    } else if (doseTime < now) {
-                        missedDoses++;
-                    }
-                });
-            });
-
-            const upcomingDoses = totalDoses - takenDoses - missedDoses;
-            const adherence = (takenDoses + missedDoses) > 0 ? 
-                Math.round((takenDoses / (takenDoses + missedDoses)) * 100) : 0;
-
-            return {
-                totalDoses,
-                takenDoses,
-                missedDoses,
-                upcomingDoses,
-                adherence,
-                totalMedications: medications.length
-            };
-        } catch (error) {
-            console.error('Error getting statistics:', error);
-            return {
-                totalDoses: 0,
-                takenDoses: 0,
-                missedDoses: 0,
-                upcomingDoses: 0,
-                adherence: 0,
-                totalMedications: 0
-            };
-        }
-    }
-
     // ===== الاستماع للتحديثات في الوقت الحقيقي =====
     listenToMedications(username, callback) {
         const ref = this.db.ref('medications/' + username);
@@ -244,43 +204,7 @@ class FirebaseDB {
             callback(medications);
         });
 
-        // إرجاع دالة لإلغاء الاستماع
         return () => ref.off();
-    }
-
-    listenToUserData(username, callback) {
-        const userRef = this.db.ref('users/' + username);
-        const medsRef = this.db.ref('medications/' + username);
-
-        const handleUpdate = async () => {
-            const [userSnapshot, medsSnapshot] = await Promise.all([
-                userRef.once('value'),
-                medsRef.once('value')
-            ]);
-
-            const userData = userSnapshot.val();
-            const medications = [];
-            
-            medsSnapshot.forEach(childSnapshot => {
-                const medication = childSnapshot.val();
-                medication.id = childSnapshot.key;
-                medications.push(medication);
-            });
-
-            callback({
-                user: userData,
-                medications: medications
-            });
-        };
-
-        userRef.on('value', handleUpdate);
-        medsRef.on('value', handleUpdate);
-
-        // إرجاع دالة لإلغاء الاستماع
-        return () => {
-            userRef.off('value', handleUpdate);
-            medsRef.off('value', handleUpdate);
-        };
     }
 }
 

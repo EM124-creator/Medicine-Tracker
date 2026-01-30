@@ -1,128 +1,61 @@
-// firebase-db.js
-// التحقق من عدم وجود FirebaseDB مسبقاً
-if (typeof FirebaseDB === 'undefined') {
-    class FirebaseDB {
-        constructor() {
-            if (typeof firebase === 'undefined') {
-                console.error('Firebase is not loaded');
-                return null;
-            }
-            
-            try {
+// firebase-db.js - مبسط بدون كلاس
+if (typeof window.FirebaseDB === 'undefined') {
+    window.FirebaseDB = {
+        db: null,
+        auth: null,
+        
+        init: function() {
+            if (typeof firebase !== 'undefined') {
                 this.db = firebase.database();
                 this.auth = firebase.auth();
-                console.log('FirebaseDB initialized successfully');
-            } catch (error) {
-                console.error('Error initializing FirebaseDB:', error);
-                return null;
+                console.log('FirebaseDB initialized');
             }
-        }
-
-        // ===== إدارة المصادقة =====
-        async login(email, password) {
-            try {
-                const userCredential = await this.auth.signInWithEmailAndPassword(email, password);
-                return {
-                    success: true,
-                    user: userCredential.user
-                };
-            } catch (error) {
-                console.error('Login error:', error);
-                return {
-                    success: false,
-                    error: error.message
-                };
-            }
-        }
-
-        async register(email, password, userData) {
-            try {
-                const userCredential = await this.auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // حفظ بيانات المستخدم
-                const username = email.split('@')[0];
-                await this.db.ref('users/' + username).set({
-                    ...userData,
-                    email: email,
-                    createdAt: new Date().toISOString()
-                });
-                
-                return {
-                    success: true,
-                    user: user
-                };
-            } catch (error) {
-                console.error('Registration error:', error);
-                return {
-                    success: false,
-                    error: error.message
-                };
-            }
-        }
-
-        async logout() {
-            try {
-                await this.auth.signOut();
-                return { success: true };
-            } catch (error) {
-                console.error('Logout error:', error);
-                return { success: false, error: error.message };
-            }
-        }
-
-        getCurrentUser() {
-            return this.auth.currentUser;
-        }
-
-        onAuthStateChanged(callback) {
-            return this.auth.onAuthStateChanged(callback);
-        }
-
+        },
+        
         // ===== إدارة المستخدمين =====
-        async saveUser(username, userData) {
+        saveUser: async function(username, userData) {
             try {
                 await this.db.ref('users/' + username).set(userData);
                 return true;
             } catch (error) {
                 console.error('Error saving user:', error);
-                throw error;
+                return false;
             }
-        }
-
-        async getUser(username) {
+        },
+        
+        getUser: async function(username) {
             try {
                 const snapshot = await this.db.ref('users/' + username).once('value');
                 return snapshot.val();
             } catch (error) {
                 console.error('Error getting user:', error);
-                throw error;
+                return null;
             }
-        }
-
-        async getAllUsers() {
+        },
+        
+        getAllUsers: async function() {
             try {
                 const snapshot = await this.db.ref('users').once('value');
                 return snapshot.val() || {};
             } catch (error) {
                 console.error('Error getting users:', error);
-                throw error;
+                return {};
             }
-        }
-
-        async deleteUser(username) {
+        },
+        
+        deleteUser: async function(username) {
             try {
                 await this.db.ref('users/' + username).remove();
                 await this.db.ref('medications/' + username).remove();
                 return true;
             } catch (error) {
                 console.error('Error deleting user:', error);
-                throw error;
+                return false;
             }
-        }
-
+        },
+        
         // ===== إدارة الأدوية =====
-        async saveMedication(username, medication) {
+        saveMedication: async function(username, medication) {
             try {
                 const medRef = this.db.ref('medications/' + username).push();
                 medication.id = medRef.key;
@@ -132,9 +65,9 @@ if (typeof FirebaseDB === 'undefined') {
                 console.error('Error saving medication:', error);
                 throw error;
             }
-        }
-
-        async updateMedication(username, medicationId, medication) {
+        },
+        
+        updateMedication: async function(username, medicationId, medication) {
             try {
                 await this.db.ref(`medications/${username}/${medicationId}`).update(medication);
                 return true;
@@ -142,9 +75,9 @@ if (typeof FirebaseDB === 'undefined') {
                 console.error('Error updating medication:', error);
                 throw error;
             }
-        }
-
-        async getUserMedications(username) {
+        },
+        
+        getUserMedications: async function(username) {
             try {
                 const snapshot = await this.db.ref('medications/' + username).once('value');
                 const medications = [];
@@ -160,9 +93,9 @@ if (typeof FirebaseDB === 'undefined') {
                 console.error('Error getting medications:', error);
                 return [];
             }
-        }
-
-        async deleteMedication(username, medicationId) {
+        },
+        
+        deleteMedication: async function(username, medicationId) {
             try {
                 await this.db.ref(`medications/${username}/${medicationId}`).remove();
                 return true;
@@ -171,46 +104,18 @@ if (typeof FirebaseDB === 'undefined') {
                 throw error;
             }
         }
-
-        // ===== تحديث جرعة معينة =====
-        async updateDoseStatus(username, medicationId, doseId, taken, note = '') {
-            try {
-                const dosePath = `medications/${username}/${medicationId}/doses/${doseId}`;
-                const updates = {
-                    taken: taken,
-                    takenTime: taken ? new Date().toISOString() : null
-                };
-                
-                if (note) {
-                    updates.note = note;
-                }
-                
-                await this.db.ref(dosePath).update(updates);
-                return true;
-            } catch (error) {
-                console.error('Error updating dose:', error);
-                throw error;
+    };
+    
+    // تهيئة قاعدة البيانات عند تحميل Firebase
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        window.FirebaseDB.init();
+    } else {
+        // انتظر حتى يتم تحميل Firebase
+        const checkFirebase = setInterval(() => {
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                window.FirebaseDB.init();
+                clearInterval(checkFirebase);
             }
-        }
-
-        // ===== الاستماع للتحديثات في الوقت الحقيقي =====
-        listenToMedications(username, callback) {
-            const ref = this.db.ref('medications/' + username);
-            
-            ref.on('value', (snapshot) => {
-                const medications = [];
-                snapshot.forEach(childSnapshot => {
-                    const medication = childSnapshot.val();
-                    medication.id = childSnapshot.key;
-                    medications.push(medication);
-                });
-                callback(medications);
-            });
-
-            return () => ref.off();
-        }
+        }, 100);
     }
-
-    // جعل الكلاس متاحًا عالميًا
-    window.FirebaseDB = FirebaseDB;
 }

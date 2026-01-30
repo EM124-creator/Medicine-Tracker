@@ -1,10 +1,10 @@
-// translation.js
-// التحقق من عدم وجود Translator مسبقاً
-if (typeof Translator === 'undefined') {
-    class Translator {
-        static translations = {
+// translation.js - FIXED VERSION
+// استبدال الكلاس بـ Object بسيط لتجنب المشاكل
+
+if (typeof window.MedicationTranslator === 'undefined') {
+    window.MedicationTranslator = {
+        translations: {
             ar: {
-                // صفحة تسجيل الدخول
                 appTitle: "نظام متابعة الأدوية",
                 appSubtitle: "إدارة أدويتك ومتابعة جرعاتك بدقة",
                 email: "البريد الإلكتروني",
@@ -13,19 +13,12 @@ if (typeof Translator === 'undefined') {
                 passwordPlaceholder: "أدخل كلمة المرور",
                 login: "تسجيل الدخول",
                 register: "تسجيل جديد",
-                demoCredentials: "بيانات الدخول للتجربة",
-                admin: "المدير",
-                testUser: "مستخدم تجريبي",
-                copyright: "© 2024 نظام متابعة الأدوية. جميع الحقوق محفوظة.",
                 fillAllFields: "يرجى ملء جميع الحقول",
                 invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
                 loginError: "حدث خطأ أثناء تسجيل الدخول",
                 welcome: "مرحباً بك",
                 systemAdmin: "مدير النظام",
-                registrationSuccess: "تم إنشاء الحساب بنجاح",
-                registrationError: "حدث خطأ أثناء التسجيل",
                 
-                // الصفحة الرئيسية
                 adminDashboard: "لوحة تحكم المدير",
                 manageUsers: "إدارة حسابات المستخدمين",
                 addMedication: "إضافة دواء جديد",
@@ -33,15 +26,6 @@ if (typeof Translator === 'undefined') {
                 printSchedule: "طباعة الجدول",
                 medicationList: "قائمة الأدوية",
                 notificationManagement: "إدارة الإشعارات والتنبيهات",
-                pushNotifications: "إشعارات Push",
-                pushNotificationsDesc: "إشعارات على شاشة هاتفك حتى عند إغلاق الموقع",
-                soundNotifications: "التنبيهات الصوتية",
-                soundNotificationsDesc: "تشغيل صوت عند وقت الدواء",
-                autoRepeat: "التكرار التلقائي",
-                autoRepeatDesc: "تكرار الإشعار كل 10 دقائق حتى أخذ الدواء",
-                muteMode: "وضع الصامت",
-                muteModeDesc: "كتم الإشعارات لمدة 10 دقائق عند الطلب",
-                testNotification: "اختبار الإشعار",
                 dosage: "الجرعة",
                 dosagePlaceholder: "مثال: حبة واحدة، ملعقة صغيرة",
                 edit: "تعديل",
@@ -74,8 +58,6 @@ if (typeof Translator === 'undefined') {
                 medicationDeleted: "تم حذف الدواء بنجاح",
                 notSpecified: "غير محدد",
                 adherence: "الالتزام",
-                
-                // الإشعارات
                 timeForMedication: "⏰ وقت الدواء!",
                 takeMedication: "تناول الدواء",
                 snooze: "تأجيل",
@@ -83,7 +65,6 @@ if (typeof Translator === 'undefined') {
                 time: "الوقت"
             },
             en: {
-                // Login Page
                 appTitle: "Medication Tracker",
                 appSubtitle: "Manage your medications and track doses accurately",
                 email: "Email",
@@ -92,19 +73,12 @@ if (typeof Translator === 'undefined') {
                 passwordPlaceholder: "Enter your password",
                 login: "Login",
                 register: "Register",
-                demoCredentials: "Demo Credentials",
-                admin: "Admin",
-                testUser: "Test User",
-                copyright: "© 2024 Medication Tracker. All rights reserved.",
                 fillAllFields: "Please fill all fields",
                 invalidCredentials: "Invalid email or password",
                 loginError: "Login error occurred",
                 welcome: "Welcome",
                 systemAdmin: "System Administrator",
-                registrationSuccess: "Account created successfully",
-                registrationError: "Registration error occurred",
                 
-                // Main Page
                 adminDashboard: "Admin Dashboard",
                 manageUsers: "Manage User Accounts",
                 addMedication: "Add New Medication",
@@ -112,15 +86,6 @@ if (typeof Translator === 'undefined') {
                 printSchedule: "Print Schedule",
                 medicationList: "Medications List",
                 notificationManagement: "Notifications Management",
-                pushNotifications: "Push Notifications",
-                pushNotificationsDesc: "Notifications on your phone even when the site is closed",
-                soundNotifications: "Sound Alerts",
-                soundNotificationsDesc: "Play sound at medication time",
-                autoRepeat: "Auto Repeat",
-                autoRepeatDesc: "Repeat notification every 10 minutes until medication is taken",
-                muteMode: "Mute Mode",
-                muteModeDesc: "Mute notifications for 10 minutes on demand",
-                testNotification: "Test Notification",
                 dosage: "Dosage",
                 dosagePlaceholder: "Example: One tablet, teaspoon",
                 edit: "Edit",
@@ -153,29 +118,27 @@ if (typeof Translator === 'undefined') {
                 medicationDeleted: "Medication deleted successfully",
                 notSpecified: "Not specified",
                 adherence: "Adherence",
-                
-                // Notifications
                 timeForMedication: "⏰ Medication Time!",
                 takeMedication: "Take Medication",
                 snooze: "Snooze",
                 close: "Close",
                 time: "Time"
             }
-        };
+        },
 
-        static currentLang = 'ar';
+        currentLang: 'ar',
 
-        static init() {
+        init: function() {
             this.currentLang = localStorage.getItem('language') || 'ar';
             this.updatePage();
             this.setupLanguageSwitcher();
-        }
+        },
 
-        static translate(key) {
+        translate: function(key) {
             return this.translations[this.currentLang][key] || key;
-        }
+        },
 
-        static updatePage() {
+        updatePage: function() {
             // تحديث النصوص
             document.querySelectorAll('[data-translate]').forEach(element => {
                 const key = element.getAttribute('data-translate');
@@ -202,17 +165,9 @@ if (typeof Translator === 'undefined') {
             // تغيير اتجاه الصفحة
             document.documentElement.dir = this.currentLang === 'ar' ? 'rtl' : 'ltr';
             document.documentElement.lang = this.currentLang;
+        },
 
-            // تحديث زر اللغة
-            const langBtn = document.getElementById('langBtn');
-            if (langBtn) {
-                langBtn.innerHTML = this.currentLang === 'ar' ? 
-                    '<i class="fas fa-language"></i> English' : 
-                    '<i class="fas fa-language"></i> العربية';
-            }
-        }
-
-        static setupLanguageSwitcher() {
+        setupLanguageSwitcher: function() {
             const langBtn = document.getElementById('langBtn');
             if (langBtn) {
                 langBtn.addEventListener('click', () => {
@@ -221,17 +176,17 @@ if (typeof Translator === 'undefined') {
                     this.updatePage();
                 });
             }
-        }
+        },
 
-        static setLanguage(lang) {
+        setLanguage: function(lang) {
             if (this.translations[lang]) {
                 this.currentLang = lang;
                 localStorage.setItem('language', lang);
                 this.updatePage();
             }
         }
-    }
-
-    // جعل الكلاس متاحًا عالميًا
-    window.Translator = Translator;
+    };
+    
+    // للتوافق مع الكود القديم
+    window.Translator = window.MedicationTranslator;
 }

@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-      <script src="translation.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        Translator.init();
-    });
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام متابعة الأدوية - تسجيل الدخول</title>
@@ -53,6 +47,9 @@
             font-weight: 600;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .lang-btn:hover {
@@ -70,8 +67,6 @@
             max-width: 450px;
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            transform-style: preserve-3d;
-            perspective: 1000px;
         }
 
         body.dark-mode .login-container {
@@ -88,12 +83,6 @@
             font-size: 4rem;
             color: #667eea;
             margin-bottom: 20px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
         }
 
         .login-title {
@@ -165,7 +154,6 @@
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-            transform: translateY(-1px);
         }
 
         .input-icon {
@@ -197,8 +185,6 @@
             justify-content: center;
             gap: 10px;
             width: 100%;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .btn-primary {
@@ -286,7 +272,6 @@
             color: #999;
         }
 
-        /* تأثيرات للجوال */
         @media (max-width: 768px) {
             .login-container {
                 padding: 30px 20px;
@@ -323,28 +308,11 @@
             
             .login-container {
                 padding: 25px 15px;
-                border-radius: 20px;
-            }
-            
-            .login-actions {
-                flex-direction: column;
             }
             
             .btn {
                 padding: 14px;
                 font-size: 14px;
-            }
-        }
-
-        /* تحسينات للطباعة */
-        @media print {
-            .login-container {
-                box-shadow: none;
-                border: 1px solid #ddd;
-            }
-            
-            .btn, .demo-info {
-                display: none !important;
             }
         }
     </style>
@@ -363,17 +331,17 @@
             <div class="login-logo">
                 <i class="fas fa-heartbeat"></i>
             </div>
-            <h1 class="login-title" data-translate="appTitle">نظام متابعة الأدوية المتقدم</h1>
+            <h1 class="login-title" data-translate="appTitle">نظام متابعة الأدوية</h1>
             <p class="login-subtitle" data-translate="appSubtitle">إدارة أدويتك ومتابعة جرعاتك بدقة</p>
         </div>
 
         <form class="login-form" id="loginForm" onsubmit="return false;">
             <div class="form-group">
-                <label class="form-label" data-translate="username">اسم المستخدم</label>
+                <label class="form-label" data-translate="email">البريد الإلكتروني</label>
                 <div class="input-with-icon">
-                    <i class="fas fa-user input-icon"></i>
-                    <input type="text" class="form-input" id="loginUsername" 
-                           placeholder="أدخل اسم المستخدم" data-translate-placeholder="usernamePlaceholder" autocomplete="username">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" class="form-input" id="loginEmail" 
+                           placeholder="أدخل بريدك الإلكتروني" data-translate-placeholder="emailPlaceholder" autocomplete="email">
                 </div>
             </div>
             
@@ -405,11 +373,11 @@
             <div class="demo-credentials">
                 <div class="credential-item">
                     <span class="credential-label" data-translate="admin">المدير:</span>
-                    <span class="credential-value">admin / admin123</span>
+                    <span class="credential-value">admin@medication.com / admin123</span>
                 </div>
                 <div class="credential-item">
                     <span class="credential-label" data-translate="testUser">مستخدم تجريبي:</span>
-                    <span class="credential-value">test / test123</span>
+                    <span class="credential-value">test@medication.com / test123</span>
                 </div>
             </div>
         </div>
@@ -429,11 +397,9 @@
     
     <!-- ملفات النظام -->
     <script src="translation.js"></script>
-    <script src="firebase-db.js"></script>
-    <script src="app.js"></script>
-
+    
     <script>
-        // تهيئة Firebase
+        // ===== تكوين Firebase =====
         const firebaseConfig = {
             apiKey: "AIzaSyBAcSevspk9_fK4jC1ZkLRhRMNqG9Pv5mU",
             authDomain: "medicine-tracker-a8955.firebaseapp.com",
@@ -450,77 +416,207 @@
             firebase.initializeApp(firebaseConfig);
         }
 
-        // دالة تسجيل الدخول
-// استبدل دالة login() الحالية بهذه:
-async function login() {
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-
-    if (!username || !password) {
-        showToast('يرجى ملء جميع الحقول', 'error');
-        return;
-    }
-
-    try {
-        // تسجيل دخول باستخدام Firebase Auth
-        const userCredential = await firebase.auth().signInWithEmailAndPassword(
-            username + '@medication.com', // Firebase Auth يحتاج email
-            password
-        );
-        
-        const user = userCredential.user;
-        
-        // الحصول على بيانات إضافية من Realtime Database
+        const auth = firebase.auth();
         const db = firebase.database();
-        const userRef = db.ref('users/' + username);
-        const snapshot = await userRef.once('value');
-        const userData = snapshot.val();
-        
-        if (userData) {
-            localStorage.setItem('currentUser', JSON.stringify({
-                id: username,
-                name: userData.name,
-                age: userData.age,
-                isAdmin: false
-            }));
-            showToast('مرحباً بك ' + userData.name, 'success');
-            window.location.href = 'index.html';
-        }
-    } catch (error) {
-        // إذا فشل تسجيل الدخول، حاول كمدير
-        if (username === 'admin' && password === 'admin123') {
-            localStorage.setItem('currentUser', JSON.stringify({
-                id: 'admin',
-                name: 'مدير النظام',
-                isAdmin: true
-            }));
-            window.location.href = 'index.html';
-        } else {
-            showToast('اسم المستخدم أو كلمة المرور غير صحيحة', 'error');
-        }
-    }
-}
 
-        // دالة فتح نافذة التسجيل
-        function openRegisterModal() {
-            // يمكنك إنشاء نافذة منبثقة أو توجيه لصفحة تسجيل
-            // هنا سأستخدم نافذة منبثقة بسيطة
-            const registerForm = `
-                <div style="padding: 20px; max-width: 400px;">
-                    <h3 style="color: #667eea; margin-bottom: 20px;">تسجيل مستخدم جديد</h3>
-                    <input type="text" id="regName" placeholder="الاسم الكامل" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <input type="text" id="regUsername" placeholder="اسم المستخدم" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <input type="password" id="regPassword" placeholder="كلمة المرور" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                    <input type="number" id="regAge" placeholder="العمر" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
-                    <button onclick="registerUser()" style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%;">تسجيل</button>
-                </div>
-            `;
+        // ===== نظام الترجمة =====
+        class Translator {
+            static translations = {
+                ar: {
+                    appTitle: "نظام متابعة الأدوية",
+                    appSubtitle: "إدارة أدويتك ومتابعة جرعاتك بدقة",
+                    email: "البريد الإلكتروني",
+                    password: "كلمة المرور",
+                    emailPlaceholder: "أدخل بريدك الإلكتروني",
+                    passwordPlaceholder: "أدخل كلمة المرور",
+                    login: "تسجيل الدخول",
+                    register: "تسجيل جديد",
+                    demoCredentials: "بيانات الدخول للتجربة",
+                    admin: "المدير",
+                    testUser: "مستخدم تجريبي",
+                    copyright: "© 2024 نظام متابعة الأدوية. جميع الحقوق محفوظة.",
+                    fillAllFields: "يرجى ملء جميع الحقول",
+                    invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+                    loginError: "حدث خطأ أثناء تسجيل الدخول",
+                    welcome: "مرحباً بك",
+                    systemAdmin: "مدير النظام",
+                    registrationSuccess: "تم إنشاء الحساب بنجاح",
+                    registrationError: "حدث خطأ أثناء التسجيل"
+                },
+                en: {
+                    appTitle: "Medication Tracker",
+                    appSubtitle: "Manage your medications and track doses accurately",
+                    email: "Email",
+                    password: "Password",
+                    emailPlaceholder: "Enter your email",
+                    passwordPlaceholder: "Enter your password",
+                    login: "Login",
+                    register: "Register",
+                    demoCredentials: "Demo Credentials",
+                    admin: "Admin",
+                    testUser: "Test User",
+                    copyright: "© 2024 Medication Tracker. All rights reserved.",
+                    fillAllFields: "Please fill all fields",
+                    invalidCredentials: "Invalid email or password",
+                    loginError: "Login error occurred",
+                    welcome: "Welcome",
+                    systemAdmin: "System Administrator",
+                    registrationSuccess: "Account created successfully",
+                    registrationError: "Registration error occurred"
+                }
+            };
+
+            static currentLang = 'ar';
+
+            static init() {
+                this.currentLang = localStorage.getItem('language') || 'ar';
+                this.updatePage();
+                this.setupLanguageSwitcher();
+            }
+
+            static translate(key) {
+                return this.translations[this.currentLang][key] || key;
+            }
+
+            static updatePage() {
+                document.querySelectorAll('[data-translate]').forEach(element => {
+                    const key = element.getAttribute('data-translate');
+                    const translation = this.translate(key);
+                    if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                        element.placeholder = translation;
+                    } else {
+                        element.textContent = translation;
+                    }
+                });
+
+                document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+                    const key = element.getAttribute('data-translate-placeholder');
+                    element.placeholder = this.translate(key);
+                });
+
+                document.documentElement.dir = this.currentLang === 'ar' ? 'rtl' : 'ltr';
+                document.documentElement.lang = this.currentLang;
+
+                const langBtn = document.getElementById('langBtn');
+                if (langBtn) {
+                    langBtn.innerHTML = this.currentLang === 'ar' ? 
+                        '<i class="fas fa-language"></i> English' : 
+                        '<i class="fas fa-language"></i> العربية';
+                }
+            }
+
+            static setupLanguageSwitcher() {
+                const langBtn = document.getElementById('langBtn');
+                if (langBtn) {
+                    langBtn.addEventListener('click', () => {
+                        this.currentLang = this.currentLang === 'ar' ? 'en' : 'ar';
+                        localStorage.setItem('language', this.currentLang);
+                        this.updatePage();
+                    });
+                }
+            }
+
+            static setLanguage(lang) {
+                if (this.translations[lang]) {
+                    this.currentLang = lang;
+                    localStorage.setItem('language', lang);
+                    this.updatePage();
+                }
+            }
+        }
+
+        // ===== دوال تسجيل الدخول =====
+        async function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!email || !password) {
+                showToast(Translator.translate('fillAllFields'), 'error');
+                return;
+            }
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // الحصول على بيانات المستخدم من Realtime Database
+                const username = email.split('@')[0];
+                const userRef = db.ref('users/' + username);
+                const snapshot = await userRef.once('value');
+                const userData = snapshot.val();
+
+                if (userData) {
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        id: username,
+                        name: userData.name,
+                        age: userData.age,
+                        email: email,
+                        isAdmin: email === 'admin@medication.com'
+                    }));
+                    
+                    showToast(Translator.translate('welcome') + ' ' + userData.name, 'success');
+                    window.location.href = 'index.html';
+                } else if (email === 'admin@medication.com') {
+                    // تسجيل دخول المدير
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        id: 'admin',
+                        name: Translator.translate('systemAdmin'),
+                        email: email,
+                        isAdmin: true
+                    }));
+                    window.location.href = 'index.html';
+                } else {
+                    showToast(Translator.translate('invalidCredentials'), 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast(Translator.translate('loginError'), 'error');
+            }
+        }
+
+        async function openRegisterModal() {
+            // استخدام نموذج تسجيل بسيط
+            const name = prompt('الرجاء إدخال اسمك الكامل:');
+            if (!name) return;
             
-            // يمكنك استخدام مكتبة مثل SweetAlert2 أو Bootstrap Modal هنا
-            alert('خاصية التسجيل الجديد تحت التطوير. يمكنك استخدام حساب تجريبي.');
+            const email = prompt('الرجاء إدخال بريدك الإلكتروني:');
+            if (!email) return;
+            
+            const password = prompt('الرجاء إدخال كلمة المرور (6 أحرف على الأقل):');
+            if (!password || password.length < 6) {
+                alert('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+                return;
+            }
+            
+            const age = prompt('الرجاء إدخال عمرك (اختياري):') || '';
+            
+            try {
+                // إنشاء حساب باستخدام Firebase Authentication
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // حفظ بيانات المستخدم في قاعدة البيانات
+                const username = email.split('@')[0];
+                await db.ref('users/' + username).set({
+                    name: name,
+                    email: email,
+                    age: age,
+                    createdAt: new Date().toISOString()
+                });
+                
+                // إنشاء قائمة أدوية فارغة للمستخدم
+                await db.ref('medications/' + username).set({});
+                
+                showToast(Translator.translate('registrationSuccess'), 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } catch (error) {
+                console.error('Registration error:', error);
+                showToast(Translator.translate('registrationError') + ': ' + error.message, 'error');
+            }
         }
 
-        // دالة عرض الإشعارات
         function showToast(message, type = 'success') {
             Toastify({
                 text: message,
@@ -541,6 +637,14 @@ async function login() {
         // تهيئة الترجمة عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', function() {
             Translator.init();
+            
+            // التحقق من وجود مستخدم مسجل بالفعل
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // إذا كان المستخدم مسجلاً بالفعل، توجيهه إلى الصفحة الرئيسية
+                    window.location.href = 'index.html';
+                }
+            });
         });
     </script>
 </body>

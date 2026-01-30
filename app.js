@@ -1,6 +1,24 @@
 // app.js
-let db;
-let currentUser = null;
+// متغيرات عامة
+let dbInstance = null;
+let currentUserData = null;
+
+// دالة لتهيئة قاعدة البيانات مرة واحدة فقط
+function initDatabase() {
+    if (!dbInstance && typeof FirebaseDB !== 'undefined') {
+        dbInstance = new FirebaseDB();
+        console.log('Database initialized successfully');
+    }
+    return dbInstance;
+}
+
+// الحصول على نسخة من قاعدة البيانات
+function getDatabase() {
+    if (!dbInstance) {
+        initDatabase();
+    }
+    return dbInstance;
+}
 
 // التحقق من وجود عناصر قبل استخدامها
 function safeQuerySelector(selector) {
@@ -9,30 +27,6 @@ function safeQuerySelector(selector) {
         console.warn(`Element not found: ${selector}`);
     }
     return element;
-}
-
-// التحقق من وجود عنصر قبل التعديل
-function safeSetTextContent(selector, text) {
-    const element = safeQuerySelector(selector);
-    if (element) {
-        element.textContent = text;
-    }
-}
-
-// التحقق من وجود عنصر قبل إضافة class
-function safeAddClass(selector, className) {
-    const element = safeQuerySelector(selector);
-    if (element) {
-        element.classList.add(className);
-    }
-}
-
-// التحقق من وجود عنصر قبل إزالة class
-function safeRemoveClass(selector, className) {
-    const element = safeQuerySelector(selector);
-    if (element) {
-        element.classList.remove(className);
-    }
 }
 
 // ===== تهيئة النظام =====
@@ -45,9 +39,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     // تهيئة قاعدة البيانات
-    if (typeof FirebaseDB !== 'undefined') {
-        db = new FirebaseDB();
-    }
+    initDatabase();
     
     // استعادة جلسة المستخدم
     await restoreSession();
@@ -62,57 +54,78 @@ document.addEventListener('DOMContentLoaded', async function() {
 // ===== إدارة الجلسة =====
 async function restoreSession() {
     try {
-        // التحقق من تسجيل الدخول باستخدام Firebase Auth
-        if (db && db.auth) {
-            db.onAuthStateChanged(async (user) => {
-                if (user) {
-                    const userStr = localStorage.getItem('currentUser');
-                    if (userStr) {
-                        currentUser = JSON.parse(userStr);
-                        showCorrectPage();
-                    } else {
-                        // إذا لم يكن هناك بيانات في localStorage، نأخذها من Firebase Auth
+        // محاولة الحصول على المستخدم من localStorage
+        const userStr = localStorage.getItem('currentUser');
+        
+        if (!userStr) {
+            // التحقق من تسجيل الدخول باستخدام Firebase Auth
+            const db = getDatabase();
+            if (db) {
+                db.onAuthStateChanged(async (user) => {
+                    if (user) {
                         const username = user.email.split('@')[0];
                         const userData = await db.getUser(username);
                         
                         if (userData) {
-                            currentUser = {
+                            currentUserData = {
                                 id: username,
                                 name: userData.name,
                                 age: userData.age,
                                 email: user.email,
                                 isAdmin: user.email === 'admin@medication.com'
                             };
-                            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                            localStorage.setItem('currentUser', JSON.stringify(currentUserData));
                             showCorrectPage();
                         }
+                    } else {
+                        // إذا لم يكن هناك مستخدم مسجل، نذهب لصفحة تسجيل الدخول
+                        if (!window.location.href.includes('login.html')) {
+                            window.location.href = 'login.html';
+                        }
                     }
-                } else {
-                    // إذا لم يكن هناك مستخدم مسجل، نذهب لصفحة تسجيل الدخول
-                    if (!window.location.href.includes('login.html')) {
-                        window.location.href = 'login.html';
-                    }
+                });
+            } else {
+                // إذا لم تكن قاعدة البيانات متاحة، اذهب لصفحة تسجيل الدخول
+                if (!window.location.href.includes('login.html')) {
+                    window.location.href = 'login.html';
                 }
-            });
+            }
+        } else {
+            currentUserData = JSON.parse(userStr);
+            showCorrectPage();
         }
     } catch (error) {
         console.error('Error restoring session:', error);
+        localStorage.removeItem('currentUser');
+        if (!window.location.href.includes('login.html')) {
+            window.location.href = 'login.html';
+        }
     }
 }
 
 function showCorrectPage() {
-    if (!currentUser) {
-        safeRemoveClass('#userPage', 'active');
-        safeRemoveClass('#adminPage', 'active');
-        return;
-    }
+    if (!currentUserData) return;
     
-    if (currentUser.isAdmin) {
-        safeAddClass('#adminPage', 'active');
-        safeRemoveClass('#userPage', 'active');
+    if (currentUserData.isAdmin) {
+        showElement('#adminPage');
+        hideElement('#userPage');
     } else {
-        safeAddClass('#userPage', 'active');
-        safeRemoveClass('#adminPage', 'active');
+        showElement('#userPage');
+        hideElement('#adminPage');
+    }
+}
+
+function showElement(selector) {
+    const element = safeQuerySelector(selector);
+    if (element) {
+        element.classList.add('active');
+    }
+}
+
+function hideElement(selector) {
+    const element = safeQuerySelector(selector);
+    if (element) {
+        element.classList.remove('active');
     }
 }
 
@@ -139,10 +152,12 @@ function updateCurrentDate() {
     
     const dateElements = document.querySelectorAll('#currentDate');
     dateElements.forEach(element => {
-        element.textContent = now.toLocaleDateString(
-            Translator.currentLang === 'ar' ? 'ar-SA' : 'en-US', 
-            options
-        );
+        if (element) {
+            element.textContent = now.toLocaleDateString(
+                Translator.currentLang === 'ar' ? 'ar-SA' : 'en-US', 
+                options
+            );
+        }
     });
 }
 
@@ -190,10 +205,13 @@ function setupEventHandlers() {
 
 // ===== تحميل البيانات =====
 async function loadData() {
-    if (!currentUser || !db) return;
+    if (!currentUserData) return;
     
     try {
-        if (currentUser.isAdmin) {
+        const db = getDatabase();
+        if (!db) return;
+        
+        if (currentUserData.isAdmin) {
             await loadAdminData();
         } else {
             await loadUserData();
@@ -206,6 +224,9 @@ async function loadData() {
 
 async function loadAdminData() {
     try {
+        const db = getDatabase();
+        if (!db) return;
+        
         const users = await db.getAllUsers();
         renderAdminUserList(users);
     } catch (error) {
@@ -215,16 +236,17 @@ async function loadAdminData() {
 
 async function loadUserData() {
     try {
-        const medications = await db.getUserMedications(currentUser.id);
+        const db = getDatabase();
+        if (!db) return;
+        
+        const medications = await db.getUserMedications(currentUserData.id);
         renderUserMedications(medications);
         renderUserInfo();
         
         // الاستماع للتحديثات في الوقت الحقيقي
-        if (db.listenToMedications) {
-            db.listenToMedications(currentUser.id, (medications) => {
-                renderUserMedications(medications);
-            });
-        }
+        db.listenToMedications(currentUserData.id, (medications) => {
+            renderUserMedications(medications);
+        });
     } catch (error) {
         console.error('Error loading user data:', error);
     }
@@ -232,7 +254,7 @@ async function loadUserData() {
 
 // ===== عرض البيانات =====
 function renderUserInfo() {
-    if (!currentUser) return;
+    if (!currentUserData) return;
     
     const userInfoDiv = document.getElementById('userInfo');
     if (!userInfoDiv) return;
@@ -242,13 +264,13 @@ function renderUserInfo() {
             <i class="fas fa-user"></i>
         </div>
         <div class="user-details">
-            <div class="user-name">${currentUser.name}</div>
-            <div class="user-age">${currentUser.age ? 'العمر: ' + currentUser.age : ''}</div>
+            <div class="user-name">${currentUserData.name}</div>
+            <div class="user-age">${currentUserData.age ? 'العمر: ' + currentUserData.age : ''}</div>
             <div style="margin-top: 10px; color: #666;">
-                <i class="fas fa-envelope"></i> ${currentUser.email}
+                <i class="fas fa-envelope"></i> ${currentUserData.email}
             </div>
         </div>
-        ${currentUser.id !== 'admin' ? `
+        ${currentUserData.id !== 'admin' ? `
             <button class="btn btn-danger delete-user-btn" onclick="deleteUserAccount()">
                 <i class="fas fa-trash"></i> حذف حسابي
             </button>
@@ -377,7 +399,7 @@ function renderAdminUserList(users) {
 let editingMedicationId = null;
 
 function openAddMedicationModal() {
-    if (!currentUser || currentUser.isAdmin) return;
+    if (!currentUserData || currentUserData.isAdmin) return;
     
     editingMedicationId = null;
     const modalTitle = document.getElementById('modalTitle');
@@ -417,9 +439,12 @@ function openAddMedicationModal() {
 }
 
 async function saveMedication() {
-    if (!currentUser || !db || currentUser.isAdmin) return;
+    if (!currentUserData || currentUserData.isAdmin) return;
 
-    const username = currentUser.id;
+    const db = getDatabase();
+    if (!db) return;
+
+    const username = currentUserData.id;
     const name = document.getElementById('medName')?.value?.trim() || '';
     const type = document.getElementById('medType')?.value || 'pill';
     const dosage = document.getElementById('medDosage')?.value?.trim() || '';
@@ -501,17 +526,69 @@ function generateDosesForMedication(startDate, startTime, duration, frequency) {
 }
 
 async function deleteMedication(medicationId) {
-    if (!currentUser || !db || !medicationId) return;
+    if (!currentUserData || !medicationId) return;
     
     if (!confirm('هل أنت متأكد من حذف هذا الدواء؟')) return;
     
     try {
-        await db.deleteMedication(currentUser.id, medicationId);
+        const db = getDatabase();
+        if (!db) return;
+        
+        await db.deleteMedication(currentUserData.id, medicationId);
         showToast('تم حذف الدواء', 'success');
         await loadData();
     } catch (error) {
         console.error('Error deleting medication:', error);
         showToast('حدث خطأ أثناء حذف الدواء', 'error');
+    }
+}
+
+async function openEditMedicationModal(medicationId) {
+    if (!currentUserData || currentUserData.isAdmin) return;
+    
+    editingMedicationId = medicationId;
+    
+    try {
+        const db = getDatabase();
+        if (!db) return;
+        
+        const medications = await db.getUserMedications(currentUserData.id);
+        const med = medications.find(m => m.id === medicationId);
+        
+        if (!med) return;
+
+        const modalTitle = document.getElementById('modalTitle');
+        if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-edit"></i> تعديل الدواء';
+        
+        const medName = document.getElementById('medName');
+        if (medName) medName.value = med.name;
+        
+        const medType = document.getElementById('medType');
+        if (medType) medType.value = med.type;
+        
+        const medDosage = document.getElementById('medDosage');
+        if (medDosage) medDosage.value = med.dosage || '';
+        
+        const medStartDate = document.getElementById('medStartDate');
+        if (medStartDate) medStartDate.value = med.startDate;
+        
+        const medStartTime = document.getElementById('medStartTime');
+        if (medStartTime) medStartTime.value = med.startTime;
+        
+        const medDuration = document.getElementById('medDuration');
+        if (medDuration) medDuration.value = med.duration;
+        
+        const medFrequency = document.getElementById('medFrequency');
+        if (medFrequency) medFrequency.value = med.frequency;
+        
+        const medFoodRelation = document.getElementById('medFoodRelation');
+        if (medFoodRelation) medFoodRelation.value = med.foodRelation;
+
+        const medicationModal = document.getElementById('medicationModal');
+        if (medicationModal) medicationModal.classList.add('active');
+    } catch (error) {
+        console.error('Error loading medication for edit:', error);
+        showToast('خطأ في تحميل بيانات الدواء', 'error');
     }
 }
 
@@ -580,12 +657,14 @@ function closeModal(modalId) {
 async function logout() {
     try {
         // تسجيل الخروج من Firebase Auth
-        if (db && db.auth) {
-            await db.auth.signOut();
+        const db = getDatabase();
+        if (db) {
+            await db.logout();
         }
         
         // مسح البيانات المحلية
         localStorage.removeItem('currentUser');
+        currentUserData = null;
         
         // توجيه إلى صفحة تسجيل الدخول
         window.location.href = 'login.html';
@@ -596,15 +675,15 @@ async function logout() {
 }
 
 function openSchedulePage() {
-    if (!currentUser) return;
+    if (!currentUserData) return;
     
-    window.open('schedule.html?user=' + encodeURIComponent(currentUser.id), '_blank');
+    window.open('schedule.html?user=' + encodeURIComponent(currentUserData.id), '_blank');
 }
 
 function printSchedule() {
-    if (!currentUser) return;
+    if (!currentUserData) return;
     
-    const printWindow = window.open('schedule.html?user=' + encodeURIComponent(currentUser.id) + '&print=true', '_blank');
+    const printWindow = window.open('schedule.html?user=' + encodeURIComponent(currentUserData.id) + '&print=true', '_blank');
     
     if (printWindow) {
         setTimeout(() => {
@@ -620,5 +699,6 @@ window.openAddMedicationModal = openAddMedicationModal;
 window.saveMedication = saveMedication;
 window.deleteMedication = deleteMedication;
 window.closeModal = closeModal;
+window.openEditMedicationModal = openEditMedicationModal;
 window.openSchedulePage = openSchedulePage;
 window.printSchedule = printSchedule;

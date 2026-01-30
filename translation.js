@@ -3,11 +3,11 @@ class Translator {
     static translations = {
         ar: {
             // صفحة تسجيل الدخول
-            appTitle: "نظام متابعة الأدوية المتقدم",
+            appTitle: "نظام متابعة الأدوية",
             appSubtitle: "إدارة أدويتك ومتابعة جرعاتك بدقة",
-            username: "اسم المستخدم",
+            email: "البريد الإلكتروني",
             password: "كلمة المرور",
-            usernamePlaceholder: "أدخل اسم المستخدم",
+            emailPlaceholder: "أدخل بريدك الإلكتروني",
             passwordPlaceholder: "أدخل كلمة المرور",
             login: "تسجيل الدخول",
             register: "تسجيل جديد",
@@ -16,21 +16,37 @@ class Translator {
             testUser: "مستخدم تجريبي",
             copyright: "© 2024 نظام متابعة الأدوية. جميع الحقوق محفوظة.",
             fillAllFields: "يرجى ملء جميع الحقول",
-            invalidCredentials: "اسم المستخدم أو كلمة المرور غير صحيحة",
+            invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
             loginError: "حدث خطأ أثناء تسجيل الدخول",
             welcome: "مرحباً بك",
             systemAdmin: "مدير النظام",
+            registrationSuccess: "تم إنشاء الحساب بنجاح",
+            registrationError: "حدث خطأ أثناء التسجيل",
             
             // الصفحة الرئيسية
+            adminDashboard: "لوحة تحكم المدير",
+            manageUsers: "إدارة حسابات المستخدمين",
             addMedication: "إضافة دواء جديد",
             viewSchedule: "عرض الجدول والإحصائيات",
             printSchedule: "طباعة الجدول",
             medicationList: "قائمة الأدوية",
+            notificationManagement: "إدارة الإشعارات والتنبيهات",
+            pushNotifications: "إشعارات Push",
+            pushNotificationsDesc: "إشعارات على شاشة هاتفك حتى عند إغلاق الموقع",
+            soundNotifications: "التنبيهات الصوتية",
+            soundNotificationsDesc: "تشغيل صوت عند وقت الدواء",
+            autoRepeat: "التكرار التلقائي",
+            autoRepeatDesc: "تكرار الإشعار كل 10 دقائق حتى أخذ الدواء",
+            muteMode: "وضع الصامت",
+            muteModeDesc: "كتم الإشعارات لمدة 10 دقائق عند الطلب",
+            testNotification: "اختبار الإشعار",
             dosage: "الجرعة",
             dosagePlaceholder: "مثال: حبة واحدة، ملعقة صغيرة",
             edit: "تعديل",
             delete: "حذف",
+            deleteAccount: "حذف حسابي",
             startDate: "تاريخ البدء",
+            firstDose: "أول جرعة",
             duration: "المدة",
             days: "أيام",
             frequency: "التكرار",
@@ -54,36 +70,24 @@ class Translator {
             medicationAdded: "تم إضافة الدواء بنجاح",
             medicationUpdated: "تم تحديث الدواء بنجاح",
             medicationDeleted: "تم حذف الدواء بنجاح",
+            notSpecified: "غير محدد",
+            adherence: "الالتزام",
             
             // الإشعارات
-            pushNotifications: "إشعارات Push",
-            soundNotifications: "التنبيهات الصوتية",
-            autoRepeat: "التكرار التلقائي",
-            mute: "وضع الصامت",
-            testNotification: "اختبار الإشعار",
             timeForMedication: "⏰ وقت الدواء!",
             takeMedication: "تناول الدواء",
             snooze: "تأجيل",
             close: "إغلاق",
-            
-            // الجدول
-            statistics: "الإحصائيات",
-            dosesTaken: "جرعات تم أخذها",
-            missedDoses: "جرعات فائتة",
-            upcomingDoses: "جرعات قادمة",
-            adherenceRate: "نسبة الالتزام",
-            monthlySchedule: "جدول الجرعات الشهري",
-            printTable: "طباعة الجدول",
-            backToMain: "العودة للصفحة الرئيسية"
+            time: "الوقت"
         },
         en: {
             // Login Page
-            appTitle: "Advanced Medication Tracker",
+            appTitle: "Medication Tracker",
             appSubtitle: "Manage your medications and track doses accurately",
-            username: "Username",
+            email: "Email",
             password: "Password",
-            usernamePlaceholder: "Enter username",
-            passwordPlaceholder: "Enter password",
+            emailPlaceholder: "Enter your email",
+            passwordPlaceholder: "Enter your password",
             login: "Login",
             register: "Register",
             demoCredentials: "Demo Credentials",
@@ -91,21 +95,37 @@ class Translator {
             testUser: "Test User",
             copyright: "© 2024 Medication Tracker. All rights reserved.",
             fillAllFields: "Please fill all fields",
-            invalidCredentials: "Invalid username or password",
+            invalidCredentials: "Invalid email or password",
             loginError: "Login error occurred",
             welcome: "Welcome",
             systemAdmin: "System Administrator",
+            registrationSuccess: "Account created successfully",
+            registrationError: "Registration error occurred",
             
             // Main Page
+            adminDashboard: "Admin Dashboard",
+            manageUsers: "Manage User Accounts",
             addMedication: "Add New Medication",
             viewSchedule: "View Schedule & Statistics",
             printSchedule: "Print Schedule",
             medicationList: "Medications List",
+            notificationManagement: "Notifications Management",
+            pushNotifications: "Push Notifications",
+            pushNotificationsDesc: "Notifications on your phone even when the site is closed",
+            soundNotifications: "Sound Alerts",
+            soundNotificationsDesc: "Play sound at medication time",
+            autoRepeat: "Auto Repeat",
+            autoRepeatDesc: "Repeat notification every 10 minutes until medication is taken",
+            muteMode: "Mute Mode",
+            muteModeDesc: "Mute notifications for 10 minutes on demand",
+            testNotification: "Test Notification",
             dosage: "Dosage",
-            dosagePlaceholder: "Example: One tablet, 5ml, etc.",
+            dosagePlaceholder: "Example: One tablet, teaspoon",
             edit: "Edit",
             delete: "Delete",
+            deleteAccount: "Delete My Account",
             startDate: "Start Date",
+            firstDose: "First Dose",
             duration: "Duration",
             days: "days",
             frequency: "Frequency",
@@ -129,34 +149,21 @@ class Translator {
             medicationAdded: "Medication added successfully",
             medicationUpdated: "Medication updated successfully",
             medicationDeleted: "Medication deleted successfully",
+            notSpecified: "Not specified",
+            adherence: "Adherence",
             
             // Notifications
-            pushNotifications: "Push Notifications",
-            soundNotifications: "Sound Alerts",
-            autoRepeat: "Auto Repeat",
-            mute: "Mute Mode",
-            testNotification: "Test Notification",
             timeForMedication: "⏰ Medication Time!",
             takeMedication: "Take Medication",
             snooze: "Snooze",
             close: "Close",
-            
-            // Schedule
-            statistics: "Statistics",
-            dosesTaken: "Doses Taken",
-            missedDoses: "Missed Doses",
-            upcomingDoses: "Upcoming Doses",
-            adherenceRate: "Adherence Rate",
-            monthlySchedule: "Monthly Schedule",
-            printTable: "Print Table",
-            backToMain: "Back to Main Page"
+            time: "Time"
         }
     };
 
     static currentLang = 'ar';
 
     static init() {
-        // الحصول على اللغة المحفوظة
         this.currentLang = localStorage.getItem('language') || 'ar';
         this.updatePage();
         this.setupLanguageSwitcher();
@@ -184,6 +191,12 @@ class Translator {
             element.placeholder = this.translate(key);
         });
 
+        // تحديث قيم الـ option
+        document.querySelectorAll('option[data-translate]').forEach(element => {
+            const key = element.getAttribute('data-translate');
+            element.textContent = this.translate(key);
+        });
+
         // تغيير اتجاه الصفحة
         document.documentElement.dir = this.currentLang === 'ar' ? 'rtl' : 'ltr';
         document.documentElement.lang = this.currentLang;
@@ -204,11 +217,6 @@ class Translator {
                 this.currentLang = this.currentLang === 'ar' ? 'en' : 'ar';
                 localStorage.setItem('language', this.currentLang);
                 this.updatePage();
-                
-                // إعادة تحميل البيانات إذا لزم الأمر
-                if (typeof window.loadData === 'function') {
-                    window.loadData();
-                }
             });
         }
     }

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام متابعة الأدوية - تسجيل الدخول</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
         * {
             margin: 0;
@@ -22,57 +21,16 @@
             justify-content: center;
             padding: 20px;
             direction: rtl;
-            transition: all 0.3s ease;
-        }
-
-        body.dark-mode {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        }
-
-        /* تبديل اللغة */
-        .language-switcher {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-        }
-
-        .lang-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .lang-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
         }
 
         .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
+            background: white;
             padding: 40px;
             border-radius: 25px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             width: 100%;
             max-width: 450px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        body.dark-mode .login-container {
-            background: rgba(44, 44, 62, 0.95);
-            color: #e0e0e0;
-            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .login-header {
@@ -92,18 +50,10 @@
             font-weight: 800;
         }
 
-        body.dark-mode .login-title {
-            color: #8fa3f5;
-        }
-
         .login-subtitle {
             color: #666;
             font-size: 1.1rem;
             margin-bottom: 30px;
-        }
-
-        body.dark-mode .login-subtitle {
-            color: #999;
         }
 
         .login-form {
@@ -125,10 +75,6 @@
             font-size: 1.1rem;
         }
 
-        body.dark-mode .form-label {
-            color: #8fa3f5;
-        }
-
         .input-with-icon {
             position: relative;
         }
@@ -142,12 +88,6 @@
             transition: all 0.3s ease;
             background: white;
             color: #333;
-        }
-
-        body.dark-mode .form-input {
-            background: #2c2c3e;
-            color: #e0e0e0;
-            border-color: #424242;
         }
 
         .form-input:focus {
@@ -220,13 +160,6 @@
             color: #0d47a1;
             font-weight: 700;
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        body.dark-mode .demo-title {
-            color: #8fa3f5;
         }
 
         .demo-credentials {
@@ -239,11 +172,6 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-
-        body.dark-mode .credential-item {
-            border-bottom-color: rgba(255,255,255,0.1);
         }
 
         .credential-label {
@@ -251,25 +179,10 @@
             color: #333;
         }
 
-        body.dark-mode .credential-label {
-            color: #e0e0e0;
-        }
-
         .credential-value {
             color: #667eea;
             font-family: monospace;
             font-size: 0.9rem;
-        }
-
-        .form-footer {
-            margin-top: 30px;
-            text-align: center;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        body.dark-mode .form-footer {
-            color: #999;
         }
 
         @media (max-width: 768px) {
@@ -289,76 +202,44 @@
             .form-input {
                 padding: 14px 15px 14px 45px;
             }
-            
-            .language-switcher {
-                top: 10px;
-                left: 10px;
-            }
-            
-            .lang-btn {
-                padding: 8px 16px;
-                font-size: 14px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .login-container {
-                padding: 25px 15px;
-            }
-            
-            .btn {
-                padding: 14px;
-                font-size: 14px;
-            }
         }
     </style>
 </head>
 <body>
-    <!-- تبديل اللغة -->
-    <div class="language-switcher">
-        <button class="lang-btn" id="langBtn">
-            <i class="fas fa-language"></i> English
-        </button>
-    </div>
-
     <!-- حاوية تسجيل الدخول -->
     <div class="login-container">
         <div class="login-header">
             <div class="login-logo">
                 <i class="fas fa-heartbeat"></i>
             </div>
-            <h1 class="login-title" data-translate="appTitle">نظام متابعة الأدوية</h1>
-            <p class="login-subtitle" data-translate="appSubtitle">إدارة أدويتك ومتابعة جرعاتك بدقة</p>
+            <h1 class="login-title">نظام متابعة الأدوية</h1>
+            <p class="login-subtitle">إدارة أدويتك ومتابعة جرعاتك بدقة</p>
         </div>
 
         <form class="login-form" id="loginForm">
             <div class="form-group">
-                <label class="form-label" data-translate="email">البريد الإلكتروني</label>
+                <label class="form-label">البريد الإلكتروني</label>
                 <div class="input-with-icon">
                     <i class="fas fa-envelope input-icon"></i>
                     <input type="email" class="form-input" id="loginEmail" 
-                           placeholder="أدخل بريدك الإلكتروني" data-translate-placeholder="emailPlaceholder" autocomplete="email">
+                           placeholder="أدخل بريدك الإلكتروني" autocomplete="email">
                 </div>
             </div>
             
             <div class="form-group">
-                <label class="form-label" data-translate="password">كلمة المرور</label>
+                <label class="form-label">كلمة المرور</label>
                 <div class="input-with-icon">
                     <i class="fas fa-lock input-icon"></i>
                     <input type="password" class="form-input" id="loginPassword" 
-                           placeholder="أدخل كلمة المرور" data-translate-placeholder="passwordPlaceholder" autocomplete="current-password">
+                           placeholder="أدخل كلمة المرور" autocomplete="current-password">
                 </div>
             </div>
             
             <div class="login-actions">
-                <button type="submit" class="btn btn-primary" data-translate="login">
+                <button type="submit" class="btn btn-primary" id="loginBtn">
                     <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
                 </button>
-                <button type="button" class="btn btn-secondary" id="registerBtn" data-translate="register">
+                <button type="button" class="btn btn-secondary" id="registerBtn">
                     <i class="fas fa-user-plus"></i> تسجيل جديد
                 </button>
             </div>
@@ -367,39 +248,28 @@
         <!-- معلومات الدخول التجريبية -->
         <div class="demo-info">
             <div class="demo-title">
-                <i class="fas fa-vial"></i>
-                <span data-translate="demoCredentials">بيانات الدخول للتجربة</span>
+                <i class="fas fa-vial"></i> بيانات الدخول للتجربة
             </div>
             <div class="demo-credentials">
                 <div class="credential-item">
-                    <span class="credential-label" data-translate="admin">المدير:</span>
+                    <span class="credential-label">المدير:</span>
                     <span class="credential-value">admin@medication.com / admin123</span>
                 </div>
                 <div class="credential-item">
-                    <span class="credential-label" data-translate="testUser">مستخدم تجريبي:</span>
+                    <span class="credential-label">مستخدم تجريبي:</span>
                     <span class="credential-value">test@medication.com / test123</span>
                 </div>
             </div>
         </div>
-
-        <div class="form-footer">
-            <p data-translate="copyright">© 2024 نظام متابعة الأدوية. جميع الحقوق محفوظة.</p>
-        </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- تحميل Firebase أولاً -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    
-    <!-- مكتبات مساعدة -->
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    
-    <!-- ملفات النظام -->
-    <script src="translation.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
     <script>
-        // ===== تهيئة Firebase =====
+        // ===== تكوين Firebase =====
         const firebaseConfig = {
             apiKey: "AIzaSyBAcSevspk9_fK4jC1ZkLRhRMNqG9Pv5mU",
             authDomain: "medicine-tracker-a8955.firebaseapp.com",
@@ -411,22 +281,12 @@
             measurementId: "G-SK8M4BFT6Q"
         };
 
-        // تهيئة Firebase فقط إذا لم تكن مسبقاً
+        // تهيئة Firebase مرة واحدة فقط
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
 
-        // ===== نظام الترجمة =====
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof Translator !== 'undefined') {
-                Translator.init();
-            }
-            
-            // إعداد معالجات الأحداث
-            setupEventHandlers();
-        });
-
-        // ===== دوال تسجيل الدخول =====
+        // دالة تسجيل الدخول
         async function handleLogin(event) {
             event.preventDefault();
             
@@ -434,7 +294,7 @@
             const password = document.getElementById('loginPassword').value.trim();
 
             if (!email || !password) {
-                showToast('يرجى ملء جميع الحقول', 'error');
+                alert('يرجى ملء جميع الحقول');
                 return;
             }
 
@@ -458,7 +318,7 @@
                         isAdmin: email === 'admin@medication.com'
                     }));
                     
-                    showToast('مرحباً بك ' + userData.name, 'success');
+                    alert('مرحباً بك ' + userData.name);
                     window.location.href = 'index.html';
                 } else if (email === 'admin@medication.com') {
                     // تسجيل دخول المدير
@@ -470,16 +330,16 @@
                     }));
                     window.location.href = 'index.html';
                 } else {
-                    showToast('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'error');
+                    alert('البريد الإلكتروني أو كلمة المرور غير صحيحة');
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                showToast('حدث خطأ أثناء تسجيل الدخول: ' + error.message, 'error');
+                alert('حدث خطأ أثناء تسجيل الدخول: ' + error.message);
             }
         }
 
+        // دالة التسجيل
         async function handleRegister() {
-            // استخدام نموذج تسجيل بسيط
             const name = prompt('الرجاء إدخال اسمك الكامل:');
             if (!name) return;
             
@@ -512,7 +372,7 @@
                 // إنشاء قائمة أدوية فارغة للمستخدم
                 await db.ref('medications/' + username).set({});
                 
-                showToast('تم إنشاء الحساب بنجاح', 'success');
+                alert('تم إنشاء الحساب بنجاح');
                 
                 // تسجيل الدخول تلقائياً
                 setTimeout(() => {
@@ -520,33 +380,17 @@
                 }, 1500);
             } catch (error) {
                 console.error('Registration error:', error);
-                showToast('حدث خطأ أثناء التسجيل: ' + error.message, 'error');
+                alert('حدث خطأ أثناء التسجيل: ' + error.message);
             }
         }
 
-        function showToast(message, type = 'success') {
-            if (typeof Toastify !== 'undefined') {
-                Toastify({
-                    text: message,
-                    duration: 3000,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: type === 'success' ? "#4CAF50" : "#f44336",
-                    stopOnFocus: true
-                }).showToast();
-            } else {
-                alert(message);
-            }
-        }
-
-        function setupEventHandlers() {
-            // زر تسجيل الدخول
+        // إعداد معالجات الأحداث
+        document.addEventListener('DOMContentLoaded', function() {
             const loginForm = document.getElementById('loginForm');
             if (loginForm) {
                 loginForm.addEventListener('submit', handleLogin);
             }
             
-            // زر التسجيل الجديد
             const registerBtn = document.getElementById('registerBtn');
             if (registerBtn) {
                 registerBtn.addEventListener('click', handleRegister);
@@ -555,15 +399,10 @@
             // التحقق من وجود مستخدم مسجل بالفعل
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
-                    // إذا كان المستخدم مسجلاً بالفعل، توجيهه إلى الصفحة الرئيسية
                     window.location.href = 'index.html';
                 }
             });
-        }
-
-        // جعل الدوال متاحة عالمياً لاستخدامها في onclick
-        window.handleLogin = handleLogin;
-        window.handleRegister = handleRegister;
+        });
     </script>
 </body>
 </html>

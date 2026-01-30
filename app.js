@@ -1,24 +1,59 @@
 // app.js
-// ===== تهيئة التطبيق =====
 let db;
-let notificationSystem;
 let currentUser = null;
 
+// التحقق من وجود عناصر قبل استخدامها
+function safeQuerySelector(selector) {
+    const element = document.querySelector(selector);
+    if (!element) {
+        console.warn(`Element not found: ${selector}`);
+    }
+    return element;
+}
+
+// التحقق من وجود عنصر قبل التعديل
+function safeSetTextContent(selector, text) {
+    const element = safeQuerySelector(selector);
+    if (element) {
+        element.textContent = text;
+    }
+}
+
+// التحقق من وجود عنصر قبل إضافة class
+function safeAddClass(selector, className) {
+    const element = safeQuerySelector(selector);
+    if (element) {
+        element.classList.add(className);
+    }
+}
+
+// التحقق من وجود عنصر قبل إزالة class
+function safeRemoveClass(selector, className) {
+    const element = safeQuerySelector(selector);
+    if (element) {
+        element.classList.remove(className);
+    }
+}
+
+// ===== تهيئة النظام =====
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('App initialized');
+    
     // تهيئة الترجمة
-    Translator.init();
+    if (typeof Translator !== 'undefined') {
+        Translator.init();
+    }
     
     // تهيئة قاعدة البيانات
-    db = new FirebaseDB();
+    if (typeof FirebaseDB !== 'undefined') {
+        db = new FirebaseDB();
+    }
     
     // استعادة جلسة المستخدم
     await restoreSession();
     
-    // تهيئة النظام
-    initSystem();
-    
-    // تهيئة نظام الإشعارات
-    initNotificationSystem();
+    // تهيئة الصفحة
+    initPage();
     
     // تحميل البيانات
     loadData();
@@ -27,51 +62,61 @@ document.addEventListener('DOMContentLoaded', async function() {
 // ===== إدارة الجلسة =====
 async function restoreSession() {
     try {
-        const userStr = localStorage.getItem('currentUser');
-        if (!userStr) {
-            // إذا لم يكن هناك مستخدم، ارجع لصفحة تسجيل الدخول
-            if (!window.location.href.includes('login.html')) {
-                window.location.href = 'login.html';
-            }
-            return;
-        }
-        
-        currentUser = JSON.parse(userStr);
-        
-        // التحقق من صحة المستخدم
-        if (currentUser.id === 'admin') {
-            // المدير ليس في قاعدة البيانات، لا داعي للتحقق
-            return;
-        }
-        
-        // التحقق من وجود المستخدم في قاعدة البيانات
-        const userData = await db.getUser(currentUser.id);
-        if (!userData) {
-            // المستخدم غير موجود، احذف الجلسة
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
+        // التحقق من تسجيل الدخول باستخدام Firebase Auth
+        if (db && db.auth) {
+            db.onAuthStateChanged(async (user) => {
+                if (user) {
+                    const userStr = localStorage.getItem('currentUser');
+                    if (userStr) {
+                        currentUser = JSON.parse(userStr);
+                        showCorrectPage();
+                    } else {
+                        // إذا لم يكن هناك بيانات في localStorage، نأخذها من Firebase Auth
+                        const username = user.email.split('@')[0];
+                        const userData = await db.getUser(username);
+                        
+                        if (userData) {
+                            currentUser = {
+                                id: username,
+                                name: userData.name,
+                                age: userData.age,
+                                email: user.email,
+                                isAdmin: user.email === 'admin@medication.com'
+                            };
+                            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                            showCorrectPage();
+                        }
+                    }
+                } else {
+                    // إذا لم يكن هناك مستخدم مسجل، نذهب لصفحة تسجيل الدخول
+                    if (!window.location.href.includes('login.html')) {
+                        window.location.href = 'login.html';
+                    }
+                }
+            });
         }
     } catch (error) {
         console.error('Error restoring session:', error);
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
     }
 }
 
-function saveSession() {
-    if (currentUser) {
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+function showCorrectPage() {
+    if (!currentUser) {
+        safeRemoveClass('#userPage', 'active');
+        safeRemoveClass('#adminPage', 'active');
+        return;
+    }
+    
+    if (currentUser.isAdmin) {
+        safeAddClass('#adminPage', 'active');
+        safeRemoveClass('#userPage', 'active');
+    } else {
+        safeAddClass('#userPage', 'active');
+        safeRemoveClass('#adminPage', 'active');
     }
 }
 
-function clearSession() {
-    currentUser = null;
-    localStorage.removeItem('currentUser');
-    window.location.href = 'login.html';
-}
-
-// ===== تهيئة النظام =====
-function initSystem() {
+function initPage() {
     // تحديث التاريخ
     updateCurrentDate();
     setInterval(updateCurrentDate, 60000);
@@ -107,7 +152,7 @@ function loadTheme() {
         document.body.classList.add('dark-mode');
         const themeButtons = document.querySelectorAll('.theme-toggle');
         themeButtons.forEach(btn => {
-            btn.innerHTML = '<i class="fas fa-sun"></i>';
+            if (btn) btn.innerHTML = '<i class="fas fa-sun"></i>';
         });
     }
 }
@@ -119,7 +164,9 @@ function toggleTheme() {
     
     const themeButtons = document.querySelectorAll('.theme-toggle');
     themeButtons.forEach(btn => {
-        btn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        if (btn) {
+            btn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
     });
 }
 
@@ -127,31 +174,33 @@ function setupEventHandlers() {
     // زر تسجيل الخروج
     const logoutBtns = document.querySelectorAll('.logout-btn');
     logoutBtns.forEach(btn => {
-        btn.addEventListener('click', logout);
+        if (btn) {
+            btn.addEventListener('click', logout);
+        }
     });
     
     // زر تبديل السمة
     const themeBtns = document.querySelectorAll('.theme-toggle');
     themeBtns.forEach(btn => {
-        btn.addEventListener('click', toggleTheme);
+        if (btn) {
+            btn.addEventListener('click', toggleTheme);
+        }
     });
 }
 
 // ===== تحميل البيانات =====
 async function loadData() {
-    if (!currentUser) return;
+    if (!currentUser || !db) return;
     
     try {
-        if (currentUser.id === 'admin') {
-            // تحميل بيانات المدير
+        if (currentUser.isAdmin) {
             await loadAdminData();
         } else {
-            // تحميل بيانات المستخدم العادي
             await loadUserData();
         }
     } catch (error) {
         console.error('Error loading data:', error);
-        showNotification(Translator.translate('loadError'), 'error');
+        showToast('خطأ في تحميل البيانات', 'error');
     }
 }
 
@@ -166,17 +215,16 @@ async function loadAdminData() {
 
 async function loadUserData() {
     try {
-        // تحميل الأدوية
         const medications = await db.getUserMedications(currentUser.id);
         renderUserMedications(medications);
-        
-        // تحميل معلومات المستخدم
         renderUserInfo();
         
         // الاستماع للتحديثات في الوقت الحقيقي
-        db.listenToMedications(currentUser.id, (medications) => {
-            renderUserMedications(medications);
-        });
+        if (db.listenToMedications) {
+            db.listenToMedications(currentUser.id, (medications) => {
+                renderUserMedications(medications);
+            });
+        }
     } catch (error) {
         console.error('Error loading user data:', error);
     }
@@ -195,17 +243,14 @@ function renderUserInfo() {
         </div>
         <div class="user-details">
             <div class="user-name">${currentUser.name}</div>
-            <div class="user-age">${currentUser.age ? Translator.translate('age') + ': ' + currentUser.age : ''}</div>
+            <div class="user-age">${currentUser.age ? 'العمر: ' + currentUser.age : ''}</div>
             <div style="margin-top: 10px; color: #666;">
-                <i class="fas fa-bell"></i> 
-                ${notificationSystem ? 
-                    (notificationSystem.pushEnabled ? Translator.translate('pushEnabled') : Translator.translate('localOnly')) : 
-                    Translator.translate('initializing')}
+                <i class="fas fa-envelope"></i> ${currentUser.email}
             </div>
         </div>
         ${currentUser.id !== 'admin' ? `
-            <button class="btn btn-danger delete-user-btn" onclick="openDeleteUserModal()">
-                <i class="fas fa-trash"></i> ${Translator.translate('delete')}
+            <button class="btn btn-danger delete-user-btn" onclick="deleteUserAccount()">
+                <i class="fas fa-trash"></i> حذف حسابي
             </button>
         ` : ''}
     `;
@@ -219,7 +264,7 @@ function renderUserMedications(medications) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <p>${Translator.translate('noMedications')}</p>
+                <p>لا توجد أدوية. قم بإضافة دواء جديد</p>
             </div>
         `;
         return;
@@ -231,9 +276,9 @@ function renderUserMedications(medications) {
         const adherence = totalDoses > 0 ? Math.round((takenDoses / totalDoses) * 100) : 0;
 
         const foodText = {
-            'before': Translator.translate('beforeMeal'),
-            'after': Translator.translate('afterMeal'),
-            'none': Translator.translate('none')
+            'before': 'قبل الأكل',
+            'after': 'بعد الأكل',
+            'none': 'لا علاقة بالطعام'
         };
 
         return `
@@ -242,34 +287,34 @@ function renderUserMedications(medications) {
                     <div class="medication-name-wrapper">
                         <span class="medication-name">${med.name}</span>
                         <span class="medication-type type-${med.type}">
-                            ${Translator.translate(med.type)}
+                            ${getTypeLabel(med.type)}
                         </span>
                     </div>
                     <div class="medication-actions">
                         <button class="btn btn-info" onclick="openEditMedicationModal('${med.id}')">
-                            <i class="fas fa-edit"></i> ${Translator.translate('edit')}
+                            <i class="fas fa-edit"></i> تعديل
                         </button>
                         <button class="btn btn-danger" onclick="deleteMedication('${med.id}')">
-                            <i class="fas fa-trash"></i> ${Translator.translate('delete')}
+                            <i class="fas fa-trash"></i> حذف
                         </button>
                     </div>
                 </div>
                 <div class="medication-info">
                     <div class="info-item">
                         <i class="fas fa-calendar-alt"></i>
-                        <span>${Translator.translate('startDate')}: ${med.startDate}</span>
+                        <span>البدء: ${med.startDate}</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-clock"></i>
-                        <span>${Translator.translate('firstDose')}: ${formatTimeTo12Hour(med.startTime)}</span>
+                        <span>أول جرعة: ${formatTimeTo12Hour(med.startTime)}</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-hourglass-half"></i>
-                        <span>${Translator.translate('duration')}: ${med.duration} ${Translator.translate('days')}</span>
+                        <span>المدة: ${med.duration} يوم</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-redo"></i>
-                        <span>${med.frequency} ${Translator.translate('timesPerDay')}</span>
+                        <span>${med.frequency} جرعات/يوم</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-utensils"></i>
@@ -277,11 +322,11 @@ function renderUserMedications(medications) {
                     </div>
                     <div class="info-item">
                         <i class="fas fa-prescription-bottle-alt"></i>
-                        <span>${Translator.translate('dosage')}: ${med.dosage || Translator.translate('notSpecified')}</span>
+                        <span>الجرعة: ${med.dosage || 'غير محدد'}</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-chart-line"></i>
-                        <span>${Translator.translate('adherence')}: ${adherence}%</span>
+                        <span>الالتزام: ${adherence}%</span>
                     </div>
                 </div>
             </div>
@@ -300,7 +345,7 @@ function renderAdminUserList(users) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-users"></i>
-                <p>${Translator.translate('noUsers')}</p>
+                <p>لا توجد حسابات مستخدمين</p>
             </div>
         `;
         return;
@@ -315,94 +360,118 @@ function renderAdminUserList(users) {
                     </div>
                     <div class="admin-user-details">
                         <h3>${user.name}</h3>
-                        <div>${Translator.translate('username')}: ${username}</div>
-                        ${user.age ? `<div>${Translator.translate('age')}: ${user.age}</div>` : ''}
+                        <div>اسم المستخدم: ${username}</div>
+                        ${user.age ? `<div>العمر: ${user.age} سنة</div>` : ''}
+                        <div><i class="fas fa-envelope"></i> ${user.email}</div>
                     </div>
                 </div>
                 <button class="btn btn-danger" onclick="adminDeleteUser('${username}')">
-                    <i class="fas fa-trash"></i> ${Translator.translate('delete')}
+                    <i class="fas fa-trash"></i> حذف
                 </button>
             </div>
         `;
     }).join('');
 }
 
-// ===== إدارة الأدوية =====
-async function openAddMedicationModal() {
-    if (!currentUser || currentUser.id === 'admin') return;
+// ===== دوال إدارة الأدوية =====
+let editingMedicationId = null;
+
+function openAddMedicationModal() {
+    if (!currentUser || currentUser.isAdmin) return;
     
-    document.getElementById('modalTitle').innerHTML = `<i class="fas fa-plus-circle"></i> ${Translator.translate('addMedication')}`;
+    editingMedicationId = null;
+    const modalTitle = document.getElementById('modalTitle');
+    if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-plus-circle"></i> إضافة دواء جديد';
     
-    // إعادة تعيين النموذج
-    document.getElementById('medName').value = '';
-    document.getElementById('medType').value = 'pill';
-    document.getElementById('medDosage').value = '';
+    const medName = document.getElementById('medName');
+    if (medName) medName.value = '';
+    
+    const medType = document.getElementById('medType');
+    if (medType) medType.value = 'pill';
+    
+    const medDosage = document.getElementById('medDosage');
+    if (medDosage) medDosage.value = '';
     
     const today = new Date();
     const defaultDate = today.toISOString().split('T')[0];
-    document.getElementById('medStartDate').value = defaultDate;
+    const medStartDate = document.getElementById('medStartDate');
+    if (medStartDate) medStartDate.value = defaultDate;
     
-    // الوقت الحالي + 5 دقائق
     const defaultTime = new Date(today.getTime() + 5 * 60000);
     const hours = defaultTime.getHours().toString().padStart(2, '0');
     const minutes = defaultTime.getMinutes().toString().padStart(2, '0');
-    document.getElementById('medStartTime').value = `${hours}:${minutes}`;
+    const medStartTime = document.getElementById('medStartTime');
+    if (medStartTime) medStartTime.value = `${hours}:${minutes}`;
     
-    document.getElementById('medDuration').value = '7';
-    document.getElementById('medFrequency').value = '3';
-    document.getElementById('medFoodRelation').value = 'before';
+    const medDuration = document.getElementById('medDuration');
+    if (medDuration) medDuration.value = '7';
     
-    // إظهار النافذة
-    document.getElementById('medicationModal').classList.add('active');
+    const medFrequency = document.getElementById('medFrequency');
+    if (medFrequency) medFrequency.value = '3';
+    
+    const medFoodRelation = document.getElementById('medFoodRelation');
+    if (medFoodRelation) medFoodRelation.value = 'before';
+    
+    const medicationModal = document.getElementById('medicationModal');
+    if (medicationModal) medicationModal.classList.add('active');
 }
 
 async function saveMedication() {
-    if (!currentUser || currentUser.id === 'admin') return;
+    if (!currentUser || !db || currentUser.isAdmin) return;
 
     const username = currentUser.id;
-    const name = document.getElementById('medName').value.trim();
-    const type = document.getElementById('medType').value;
-    const dosage = document.getElementById('medDosage').value.trim();
-    const startDate = document.getElementById('medStartDate').value;
-    const startTime = document.getElementById('medStartTime').value;
-    const duration = parseInt(document.getElementById('medDuration').value);
-    const frequency = parseInt(document.getElementById('medFrequency').value);
-    const foodRelation = document.getElementById('medFoodRelation').value;
+    const name = document.getElementById('medName')?.value?.trim() || '';
+    const type = document.getElementById('medType')?.value || 'pill';
+    const dosage = document.getElementById('medDosage')?.value?.trim() || '';
+    const startDate = document.getElementById('medStartDate')?.value || '';
+    const startTime = document.getElementById('medStartTime')?.value || '';
+    const duration = parseInt(document.getElementById('medDuration')?.value || '7');
+    const frequency = parseInt(document.getElementById('medFrequency')?.value || '3');
+    const foodRelation = document.getElementById('medFoodRelation')?.value || 'before';
 
-    // التحقق من المدخلات
     if (!name || !startDate || !startTime || !duration || !frequency) {
-        showNotification(Translator.translate('fillAllFields'), 'error');
+        showToast('يرجى ملء جميع الحقول', 'error');
         return;
     }
 
     try {
-        const medication = {
-            name: name,
-            type: type,
-            dosage: dosage,
-            startDate: startDate,
-            startTime: startTime,
-            duration: duration,
-            frequency: frequency,
-            foodRelation: foodRelation,
-            doses: generateDosesForMedication(startDate, startTime, duration, frequency),
-            createdAt: new Date().toISOString()
-        };
+        if (editingMedicationId) {
+            // تحديث الدواء
+            await db.updateMedication(username, editingMedicationId, {
+                name: name,
+                type: type,
+                dosage: dosage,
+                startDate: startDate,
+                startTime: startTime,
+                duration: duration,
+                frequency: frequency,
+                foodRelation: foodRelation
+            });
+            showToast('تم تعديل الدواء بنجاح', 'success');
+        } else {
+            // إضافة دواء جديد
+            const medication = {
+                name: name,
+                type: type,
+                dosage: dosage,
+                startDate: startDate,
+                startTime: startTime,
+                duration: duration,
+                frequency: frequency,
+                foodRelation: foodRelation,
+                doses: generateDosesForMedication(startDate, startTime, duration, frequency),
+                createdAt: new Date().toISOString()
+            };
 
-        await db.saveMedication(username, medication);
-        showNotification(Translator.translate('medicationAdded'), 'success');
-        closeModal('medicationModal');
-        
-        // إعادة جدولة الإشعارات
-        if (notificationSystem) {
-            notificationSystem.cancelAllAlerts();
-            setTimeout(() => {
-                notificationSystem.checkScheduledAlerts();
-            }, 1000);
+            await db.saveMedication(username, medication);
+            showToast('تم إضافة الدواء بنجاح', 'success');
         }
+
+        closeModal('medicationModal');
+        await loadData();
     } catch (error) {
         console.error('Error saving medication:', error);
-        showNotification(Translator.translate('saveError'), 'error');
+        showToast('حدث خطأ أثناء حفظ الدواء', 'error');
     }
 }
 
@@ -432,53 +501,17 @@ function generateDosesForMedication(startDate, startTime, duration, frequency) {
 }
 
 async function deleteMedication(medicationId) {
-    if (!currentUser || !medicationId) return;
+    if (!currentUser || !db || !medicationId) return;
     
-    if (!confirm(Translator.translate('deleteConfirmation'))) return;
+    if (!confirm('هل أنت متأكد من حذف هذا الدواء؟')) return;
     
     try {
         await db.deleteMedication(currentUser.id, medicationId);
-        showNotification(Translator.translate('medicationDeleted'), 'success');
-        
-        // إعادة جدولة الإشعارات
-        if (notificationSystem) {
-            notificationSystem.cancelAllAlerts();
-            setTimeout(() => {
-                notificationSystem.checkScheduledAlerts();
-            }, 1000);
-        }
+        showToast('تم حذف الدواء', 'success');
+        await loadData();
     } catch (error) {
         console.error('Error deleting medication:', error);
-        showNotification(Translator.translate('deleteError'), 'error');
-    }
-}
-
-// ===== نظام الإشعارات =====
-function initNotificationSystem() {
-    if ('Notification' in window && Notification.permission === 'granted') {
-        console.log('Notifications already granted');
-    } else if ('Notification' in window && Notification.permission !== 'denied') {
-        Notification.requestPermission();
-    }
-    
-    // تسجيل Service Worker
-    registerServiceWorker();
-}
-
-async function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        try {
-            // التأكد من أننا في بروتوكول HTTP/HTTPS
-            if (window.location.protocol === 'file:') {
-                console.log('Service Worker لا يعمل مع بروتوكول file://. يرجى استخدام خادم ويب.');
-                return;
-            }
-            
-            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-            console.log('Service Worker registered:', registration);
-        } catch (error) {
-            console.error('Service Worker registration failed:', error);
-        }
+        showToast('حدث خطأ أثناء حذف الدواء', 'error');
     }
 }
 
@@ -505,16 +538,35 @@ function formatDateTimeTo12Hour(dateTimeStr) {
     return `${hours12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 }
 
-function showNotification(message, type = 'success') {
-    // استخدام Toastify.js للإشعارات
-    Toastify({
-        text: message,
-        duration: 3000,
-        gravity: "top",
-        position: Translator.currentLang === 'ar' ? "left" : "right",
-        backgroundColor: type === 'success' ? "#4CAF50" : "#f44336",
-        stopOnFocus: true
-    }).showToast();
+function getTypeLabel(type) {
+    const labels = {
+        'pill': 'حبوب',
+        'capsule': 'كبسولات',
+        'syrup': 'شراب',
+        'drops': 'قطرة',
+        'injection': 'حقن',
+        'cream': 'كريم',
+        'inhaler': 'بخاخ',
+        'other': 'أخرى'
+    };
+    return labels[type] || 'أخرى';
+}
+
+function showToast(message, type = 'success') {
+    // استخدام Toastify.js إذا كان متاحاً
+    if (typeof Toastify !== 'undefined') {
+        Toastify({
+            text: message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: type === 'success' ? "#4CAF50" : "#f44336",
+            stopOnFocus: true
+        }).showToast();
+    } else {
+        // بديل بسيط
+        alert(message);
+    }
 }
 
 function closeModal(modalId) {
@@ -522,25 +574,51 @@ function closeModal(modalId) {
     if (modal) {
         modal.classList.remove('active');
     }
+    editingMedicationId = null;
+}
+
+async function logout() {
+    try {
+        // تسجيل الخروج من Firebase Auth
+        if (db && db.auth) {
+            await db.auth.signOut();
+        }
+        
+        // مسح البيانات المحلية
+        localStorage.removeItem('currentUser');
+        
+        // توجيه إلى صفحة تسجيل الدخول
+        window.location.href = 'login.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+        window.location.href = 'login.html';
+    }
+}
+
+function openSchedulePage() {
+    if (!currentUser) return;
+    
+    window.open('schedule.html?user=' + encodeURIComponent(currentUser.id), '_blank');
+}
+
+function printSchedule() {
+    if (!currentUser) return;
+    
+    const printWindow = window.open('schedule.html?user=' + encodeURIComponent(currentUser.id) + '&print=true', '_blank');
+    
+    if (printWindow) {
+        setTimeout(() => {
+            printWindow.print();
+        }, 1000);
+    }
 }
 
 // ===== دوال متاحة عالمياً =====
 window.toggleTheme = toggleTheme;
-window.logout = function() {
-    clearSession();
-};
-
+window.logout = logout;
 window.openAddMedicationModal = openAddMedicationModal;
 window.saveMedication = saveMedication;
 window.deleteMedication = deleteMedication;
 window.closeModal = closeModal;
-
-// دالة للتحقق من تسجيل الدخول في كل صفحة
-function checkAuth() {
-    const userStr = localStorage.getItem('currentUser');
-    if (!userStr) {
-        window.location.href = 'login.html';
-        return false;
-    }
-    return true;
-}
+window.openSchedulePage = openSchedulePage;
+window.printSchedule = printSchedule;
